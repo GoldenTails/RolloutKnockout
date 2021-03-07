@@ -5,6 +5,7 @@ fi
 PK3_FLAGS=${PK3_FLAGS:-'ZRK'}
 PK3_VERSION=${PK3_VERSION:-'v0.7.1'}
 PK3_NAME=${PK3_NAME:-'Rollout_Knockout'}
+FOLDER_NAME=${FOLDER_NAME:-'rollout'}
 
 PK3_FULLNAME="$PK3_FLAGS"_"$PK3_NAME"-"$PK3_VERSION"
 
@@ -31,7 +32,7 @@ if [[ "$*" == *"cleanbuilds"* ]]; then
 fi
 
 if [[ ! $PK3_RELEASE ]]; then
-	PK3_TIME=$(date +"%m.%d.%y-%T")
+	PK3_TIME=$(date +"%m.%d.%y-%H.%M.%S")
 
 	PK3_METADATA="$PK3_COMMIT"_"$PK3_TIME"
 	PK3_FULLNAME="$PK3_FULLNAME"+"$PK3_METADATA"
@@ -47,7 +48,7 @@ PK3_FILES=${PK3_FILES:-$(cat <<-END
 END
 )}
 
-cd $PK3_NAME
+cd $FOLDER_NAME
 #rm ../builds/$PK3_FULLNAME.pk3
 zip -FSr ../builds/$PK3_FULLNAME.pk3 $(echo $PK3_FILES | tr '\r\n' ' ')
 
