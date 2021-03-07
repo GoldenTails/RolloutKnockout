@@ -32,10 +32,17 @@ if [[ "$*" == *"cleanbuilds"* ]]; then
 fi
 
 if [[ ! $PK3_RELEASE ]]; then
-	PK3_TIME=$(date +"%m.%d.%y-%H.%M.%S")
+	if [[ "$*" == *"discord"* ]]; then
+		PK3_TIME=$(date +"%m.%d.%y-%H.%M.%S")
 
-	PK3_METADATA="$PK3_COMMIT"_"$PK3_TIME"
-	PK3_FULLNAME="$PK3_FULLNAME"+"$PK3_METADATA"
+		PK3_METADATA="$PK3_COMMIT"_"$PK3_TIME"
+		PK3_FULLNAME="$PK3_FULLNAME"-discord_"$PK3_METADATA"
+	else
+		PK3_TIME=$(date +"%m.%d.%y-%H.%M.%S")
+
+		PK3_METADATA="$PK3_COMMIT"_"$PK3_TIME"
+		PK3_FULLNAME="$PK3_FULLNAME"+"$PK3_METADATA"
+	fi
 fi
 
 PK3_FILES=${PK3_FILES:-$(cat <<-END
