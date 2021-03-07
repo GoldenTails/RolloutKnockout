@@ -1,0 +1,55 @@
+Level R2
+LevelName = Rocky Coastline
+Subtitle = By So2ro
+Music = MP_COA
+TypeOfLevel = ROLLOUT
+Skynum = 14
+SelectHeading = Big Maps
+NextLevel = RI
+
+Level RI
+LevelName = Techno Silo
+Music = THZ1
+TypeOfLevel = ROLLOUT
+Skynum = 4
+SelectHeading = Small Maps
+Subtitle = By Dead
+NextLevel = RJ
+Lua.rockfloat = true
+
+Level RJ
+LevelName = Molten Rock
+Music = RVZ2
+TypeOfLevel = ROLLOUT
+Skynum = 159
+SelectHeading = Small Maps
+Subtitle = By So2ro
+NextLevel = RK
+Lua.rockfloat = true
+
+Level RK
+LevelName = Freezy Fight
+Music = MP_ICE
+TypeOfLevel = ROLLOUT
+Skynum = 8
+Weather = 2
+Subtitle = By So2ro
+SelectHeading = Small Maps
+NextLevel = RL
+
+Level RL
+Levelname = Primordial Arena
+Music = BHZ
+TypeOfLevel = ROLLOUT
+SkyNum = 99
+Subtitle = By So2ro
+NextLevel = R2
+SelectHeading = Small Maps
+
+#Level S1
+#Levelname = Grassy Floats
+#Music = GFZALT
+#TypeOfLevel = ROLLOUTRACE
+#Skynum = 300
+#SelectHeading = 8 players tops
+#Lua.airdrown = true
