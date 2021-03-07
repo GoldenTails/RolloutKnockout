@@ -3,6 +3,9 @@ freeslot(
 --"TOL_ROLLOUTRACE"
 )
 
+freeslot("sfx_pointu")
+sfxinfo[sfx_pointu].caption = "Point up!"
+
 G_AddGametype({
     name = "Rollout Knockout",
     identifier = "ROLLOUT",
@@ -26,6 +29,72 @@ G_AddGametype({
 		"Well, of course this was gonna happen, Rollout Racing."..
 		"'It's a race to the finish, you say?' HELL YES!"
 })*/
+
+-- Lat'
+freeslot("MT_AURA")
+for i = 1, 3
+	freeslot("S_AURA"..i)
+end
+freeslot("SPR_SUMN")
+
+mobjinfo[MT_AURA] = {
+	spawnstate = S_AURA1,
+	spawnhealth = 1000,
+	radius = 16*FRACUNIT,
+	height = 32*FRACUNIT,
+	dispoffset = 32,
+	flags = MF_NOGRAVITY|MF_NOCLIPTHING|MF_NOBLOCKMAP|MF_NOCLIPHEIGHT|MF_NOCLIP,
+}
+
+states[S_AURA1] = {SPR_SUMN, A|FF_FULLBRIGHT|FF_TRANS30|FF_PAPERSPRITE, 5, nil, 0, 0, S_AURA2}
+states[S_AURA2] = {SPR_SUMN, A|FF_FULLBRIGHT|FF_TRANS60|FF_PAPERSPRITE, 5, nil, 0, 0, S_AURA3}
+states[S_AURA3] = {SPR_SUMN, A|FF_FULLBRIGHT|FF_TRANS80|FF_PAPERSPRITE, 5, nil, 0, 0, S_NULL}
+
+freeslot("SPR_FRAG")
+for i = 1, 5
+	freeslot("S_FRAG"..i)
+end
+local trans = {TR_TRANS50, TR_TRANS60, TR_TRANS70, TR_TRANS80, TR_TRANS60}
+for i = 0,4
+	states[S_FRAG1+i]	= {SPR_SUMN, (i+1)|FF_FULLBRIGHT|trans[i+1], 3, nil, 0, 0, i<3 and S_FRAG2+i or S_NULL}
+end
+
+rawset(_G, "spawnAura", function(mo, color)	-- spawn a aura around mo
+	if leveltime%2 then return end
+	if not mo or not mo.valid then return end
+	color = $ or SKINCOLOR_TEAL
+	local baseangle = P_RandomRange(1, 360)*ANG1
+	local dist = 30
+	for i = 0, 12
+		local angle = baseangle + i*6*ANG1
+		local x, y = mo.x + dist*cos(angle), mo.y + dist*sin(angle)
+
+		local aura = P_SpawnMobj(x, y, mo.z + mo.height/4 + i*FRACUNIT*3, MT_AURA)
+		--if not aura or not aura.valid continue end
+		aura.angle = angle - ANGLE_90
+		aura.color = color
+		aura.momz = P_RandomRange(2, 5)*FRACUNIT
+		aura.scale = FRACUNIT/2
+		aura.destscale = FRACUNIT
+		P_InstaThrust(aura, angle, FRACUNIT*P_RandomRange(1, 3))
+	end
+
+	local zoffs = mo.eflags & MFE_VERTICALFLIP and -65*mo.scale or 0
+	for i = 1, 8
+		local wf = 32
+		local hf = P_RandomRange(65, 1)*mo.scale*P_MobjFlip(mo)
+		local x, y, z = mo.x + P_RandomRange(-wf, wf)*mo.scale, mo.y + P_RandomRange(-wf, wf)*mo.scale, mo.z + zoffs + hf
+		local t = P_SpawnMobj(x, y, z, MT_AURA)
+		t.color = color or SKINCOLOR_TEAL
+		t.eflags = mo.eflags & MFE_VERTICALFLIP
+		t.flags2 = mo.flags2 & MF2_OBJECTFLIP
+		t.state = i==7 and S_FRAG5 or S_FRAG1
+		P_SetObjectMomZ(t, P_RandomRange(4, 12)*FRACUNIT)
+		t.scale = mo.scale*2
+		t.destscale = 1
+		t.scalespeed = mo.scale/24
+	end
+end)
 
 rawset(_G, "G_IsRolloutGametype", function()
 	return (gametype == GT_ROLLOUT)-- or (gametype == GT_RROLLOUT)
@@ -58,7 +127,7 @@ end)
 
 addHook("PreThinkFrame", do
 	for p in players.iterate
-		if (p.weapondelay <= 2)
+		if (p.weapondelay <= 2) then
 			p.weapondelay = 2 -- Do not fire rings. Ever.
 		end
 	end
@@ -68,18 +137,21 @@ addHook("PlayerThink", function(player)
 	if G_IsRolloutGametype() and (player.mo and player.mo.valid) then
 		local cmd = player.cmd
 		local mo = player.mo
-		if player.powers[pw_carry] & CR_ROLLOUT then
-			player.pflags = $ |PF_JUMPSTASIS
+		
+		-- On the rock?
+		if (player.powers[pw_carry] & CR_ROLLOUT) then
+			player.pflags = $|PF_JUMPSTASIS -- NO JUMP
 		end
-		if player.powers[pw_nocontrol] == 0
-		and not (player.powers[pw_carry] & CR_ROLLOUT) then
-			P_DamageMobj(mo,nil,nil,1,DMG_INSTAKILL)
+		
+		if not player.powers[pw_nocontrol] -- Have control?
+		and not (player.powers[pw_carry] & CR_ROLLOUT) then -- Not on the rock?
+			P_DamageMobj(mo,nil,nil,1,DMG_INSTAKILL) -- Die
 		end
-		if mapheaderinfo[gamemap].airdrown then
-			if mo.state == S_PLAY_DEAD then
-				mo.state = S_PLAY_DRWN
-				S_StartSound(mo,sfx_drown)
-			end
+				
+		if mapheaderinfo[gamemap].airdrown
+		and mo.state == S_PLAY_DEAD then
+			mo.state = S_PLAY_DRWN
+			S_StartSound(mo,sfx_drown)
 		end
 		
 		if (cmd.buttons & BT_ATTACK) and not (player.pflags & PF_ATTACKDOWN) -- Pressing the attack button
@@ -100,9 +172,9 @@ addHook("PlayerThink", function(player)
 				player.powers[pw_sneakers] = TICRATE
 				player.powers[pw_nocontrol] = TICRATE/2
 				player.weapondelay = 3*TICRATE
-				if mo.tracer and mo.tracer.valid
-					P_InstaThrust(mo.tracer, mo.angle, player.normalspeed/2)
-					P_SetObjectMomZ(mo.tracer, 5*FRACUNIT, true)
+				if mo.rock and mo.rock.valid
+					P_InstaThrust(mo.rock, mo.angle, player.normalspeed/2)
+					P_SetObjectMomZ(mo.rock, 5*FRACUNIT, true)
 				else
 					P_InstaThrust(mo, mo.angle, player.normalspeed/2)
 					P_SetObjectMomZ(mo, 5*FRACUNIT, true)
@@ -110,9 +182,8 @@ addHook("PlayerThink", function(player)
 			end
 		end
 		
-		
-		if mo.tracer and mo.tracer.valid
-		and not P_IsObjectOnGround(mo.tracer)
+		if mo.rock and mo.rock.valid
+		and not P_IsObjectOnGround(mo.rock)
 		and ((leveltime%3) == 0)
 		and player.powers[pw_sneakers]
 			P_SpawnGhostMobj(mo)
@@ -142,10 +213,22 @@ addHook("MobjThinker", function(mo)
                 local slope = mo.standingslope -- Simplify ourselves
                 P_InstaThrust(mo, slope.xydirection, FRACUNIT*2) -- Push the rock down the slope
             end
+			
+			/*-- Did your target player suddenly die?
+			if mo.target.player and mo.target.player.valid
+			and (mo.target.player.playerstate == PST_DEAD) then
+				P_RemoveMobj(mo) -- So should you!
+				return
+			end*/
         else -- Oops, your target dissappeared?
-            P_RemoveMobj(mo) -- So should you!
-            return
+			P_RemoveMobj(mo) -- So should you!
+			return
         end
+		
+		if mo.fxtimer and (mo.fxtimer > 0) then
+			mo.fxtimer = $ - 1
+			spawnAura(mo, mo.color)
+		end
     end
 end, MT_ROLLOUTROCK)
 
@@ -189,10 +272,25 @@ addHook("MobjRemoved", function(mobj)
 			P_SetMobjStateNF(poof, S_FBOMB_EXPL1)
 			S_StartSound(poof, sfx_s3k4e)
 			
-			if mobj.lastbumper then
-				P_DamageMobj(mobj.target,mobj,mobj.lastbumper,1,DMG_INSTAKILL) -- Kill your host
-			else
-				P_DamageMobj(mobj.target,nil,nil,1,DMG_INSTAKILL) -- Kill your host
+			-- Your host is already dead". Eg. Your host died before you.
+			if (mobj.target.player.playerstate == PST_DEAD) then 
+				if mobj.lastbumper and mobj.lastbumper.valid
+				and mobj.lastbumper.player 
+				and mobj.lastbumper.player.valid then -- Validity check
+					-- There would be occurances where your host dies before the rock disappears, and no points for score are awarded
+					-- This 'hopefully' fixes that.
+					P_AddPlayerScore(mobj.lastbumper.player, 100)
+					mobj.lastbumper.rock.fxtimer = 3*TICRATE/2
+					S_StartSound(mobj.lastbumper.rock, sfx_pointu)
+				end
+			else -- You died before your host.
+				if mobj.lastbumper and mobj.lastbumper.valid then
+					P_DamageMobj(mobj.target,mobj.lastbumper.rock,mobj.lastbumper,1,DMG_INSTAKILL) -- Kill your host
+					mobj.lastbumper.rock.fxtimer = 3*TICRATE/2
+					S_StartSound(mobj.lastbumper.rock, sfx_pointu)
+				else
+					P_DamageMobj(mobj.target,nil,nil,1,DMG_INSTAKILL) -- Kill your host
+				end
 			end
 		end
     end
@@ -204,15 +302,6 @@ addHook("MobjDeath", function(mo)
 		if mo and mo.valid
 		and mo.player and mo.player.valid
 		and mo.rock and mo.rock.valid -- Rock is still valid
-			if mo.rock.lastbumper and mo.rock.lastbumper.valid -- Our last bumper is valid
-			and mo.rock.lastbumper.player and mo.rock.lastbumper.player.valid then -- Our last bumper is a player
-				P_AddPlayerScore(mo.rock.lastbumper.player, 100)
-			end
-			
-			-- Poof goes the rock!
-			local poof = P_SpawnMobj(mo.rock.x, mo.rock.y, mo.rock.z, MT_EXPLODE)
-			P_SetMobjStateNF(poof, S_FBOMB_EXPL1)
-			S_StartSound(poof, sfx_s3k4e)
 			P_RemoveMobj(mo.rock) -- If the rock still exists, remove it
 		end
 	end
