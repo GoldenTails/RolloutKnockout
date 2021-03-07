@@ -2,10 +2,23 @@ if [[ "$*" == *"release"* ]]; then
 	PK3_RELEASE=1
 fi
 
-PK3_FLAGS=${PK3_FLAGS:-'ZRK'}
-PK3_VERSION=${PK3_VERSION:-'v0.7.2'}
-PK3_NAME=${PK3_NAME:-'Rollout_Knockout'}
-FOLDER_NAME=${FOLDER_NAME:-'rollout'}
+. defaults.sh
+
+testCmd() {
+	if ! command -v $@ &> /dev/null
+	then
+	    echo "$@ could not be found, please install the required package."
+	    exit
+	fi
+}
+
+testCmd "zip";
+testCmd "ln";
+
+PK3_FLAGS=${PK3_FLAGS:-$PK3_FLAGS_DEF}
+PK3_VERSION=${PK3_VERSION:-$PK3_VERSION_DEF}
+PK3_NAME=${PK3_NAME:-$PK3_NAME_DEF}
+FOLDER_NAME=${FOLDER_NAME:-$FOLDER_NAME_DEF}
 
 PK3_FULLNAME="$PK3_FLAGS"_"$PK3_NAME"-"$PK3_VERSION"
 
