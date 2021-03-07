@@ -3,7 +3,7 @@ if [[ "$*" == *"release"* ]]; then
 fi
 
 PK3_FLAGS=${PK3_FLAGS:-'ZRK'}
-PK3_VERSION=${PK3_VERSION:-'v0.7.1'}
+PK3_VERSION=${PK3_VERSION:-'v0.7.2'}
 PK3_NAME=${PK3_NAME:-'Rollout_Knockout'}
 FOLDER_NAME=${FOLDER_NAME:-'rollout'}
 

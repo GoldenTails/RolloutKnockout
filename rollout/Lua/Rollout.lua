@@ -84,10 +84,10 @@ addHook("PlayerThink", function(player)
 		
 		if (cmd.buttons & BT_ATTACK) and not (player.pflags & PF_ATTACKDOWN) -- Pressing the attack button
 			player.pflags = $ | PF_ATTACKDOWN
-			/*if (p.currentweapon == WEP_AUTO) -- Automatic Ring (Speed Burst) selected
-			and (p.ringweapons & RW_AUTO) -- Weapon ring able to be fired
-			and (p.powers[pw_automaticring] > 0) -- Player has Auto rings to spare?
-			and (p.weapondelay <= 4)*/
+			--if (p.currentweapon == WEP_AUTO) -- Automatic Ring (Speed Burst) selected
+			--and (p.ringweapons & RW_AUTO) -- Weapon ring able to be fired
+			--and (p.powers[pw_automaticring] > 0) -- Player has Auto rings to spare?
+			--and (p.weapondelay <= 4)
 			if (player.weapondelay <= 4)
 				-- Let's give your character a dashing ability
 				--p.pflags = $ & ~PF_ATTACKDOWN -- Attack is repeatable
@@ -184,6 +184,11 @@ addHook("MobjRemoved", function(mobj)
 		if mobj and mobj.valid -- Valid check
 		and mobj.target -- Do you have a target?
 		and mobj.target.player and mobj.target.player.valid then -- Is it a player?
+			-- Poof goes the rock!
+			local poof = P_SpawnMobj(mobj.x, mobj.y, mobj.z + FRACUNIT*32, MT_EXPLODE)
+			P_SetMobjStateNF(poof, S_FBOMB_EXPL1)
+			S_StartSound(poof, sfx_s3k4e)
+			
 			if mobj.lastbumper then
 				P_DamageMobj(mobj.target,mobj,mobj.lastbumper,1,DMG_INSTAKILL) -- Kill your host
 			else
@@ -204,6 +209,10 @@ addHook("MobjDeath", function(mo)
 				P_AddPlayerScore(mo.rock.lastbumper.player, 100)
 			end
 			
+			-- Poof goes the rock!
+			local poof = P_SpawnMobj(mo.rock.x, mo.rock.y, mo.rock.z, MT_EXPLODE)
+			P_SetMobjStateNF(poof, S_FBOMB_EXPL1)
+			S_StartSound(poof, sfx_s3k4e)
 			P_RemoveMobj(mo.rock) -- If the rock still exists, remove it
 		end
 	end
