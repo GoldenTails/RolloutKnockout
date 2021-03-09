@@ -31,14 +31,14 @@ G_AddGametype({
 })*/
 
 -- Lat'
-freeslot("MT_AURA")
+freeslot("MT_DUMMY")
 for i = 1, 3
 	freeslot("S_AURA"..i)
 end
 freeslot("SPR_SUMN")
 
-mobjinfo[MT_AURA] = {
-	spawnstate = S_AURA1,
+mobjinfo[MT_DUMMY] = {
+	spawnstate = S_THOK,
 	spawnhealth = 1000,
 	radius = 16*FRACUNIT,
 	height = 32*FRACUNIT,
@@ -69,8 +69,9 @@ rawset(_G, "spawnAura", function(mo, color)	-- spawn a aura around mo
 		local angle = baseangle + i*6*ANG1
 		local x, y = mo.x + dist*cos(angle), mo.y + dist*sin(angle)
 
-		local aura = P_SpawnMobj(x, y, mo.z + mo.height/4 + i*FRACUNIT*3, MT_AURA)
+		local aura = P_SpawnMobj(x, y, mo.z + mo.height/4 + i*FRACUNIT*3, MT_DUMMY)
 		--if not aura or not aura.valid continue end
+		aura.state = S_AURA1
 		aura.angle = angle - ANGLE_90
 		aura.color = color
 		aura.momz = P_RandomRange(2, 5)*FRACUNIT
@@ -84,7 +85,7 @@ rawset(_G, "spawnAura", function(mo, color)	-- spawn a aura around mo
 		local wf = 32
 		local hf = P_RandomRange(65, 1)*mo.scale*P_MobjFlip(mo)
 		local x, y, z = mo.x + P_RandomRange(-wf, wf)*mo.scale, mo.y + P_RandomRange(-wf, wf)*mo.scale, mo.z + zoffs + hf
-		local t = P_SpawnMobj(x, y, z, MT_AURA)
+		local t = P_SpawnMobj(x, y, z, MT_DUMMY)
 		t.color = color or SKINCOLOR_TEAL
 		t.eflags = mo.eflags & MFE_VERTICALFLIP
 		t.flags2 = mo.flags2 & MF2_OBJECTFLIP
@@ -134,7 +135,9 @@ addHook("PreThinkFrame", do
 end)
 
 addHook("PlayerThink", function(player)
-	if G_IsRolloutGametype() and (player.mo and player.mo.valid) then
+	if G_IsRolloutGametype()
+	and (player.mo and player.mo.valid) 
+	and player.playerstate ~= PST_DEAD then
 		local cmd = player.cmd
 		local mo = player.mo
 		
@@ -232,6 +235,17 @@ addHook("MobjThinker", function(mo)
     end
 end, MT_ROLLOUTROCK)
 
+addHook("MobjThinker", function(mo)
+    if mo and mo.valid
+    and G_IsRolloutGametype() 
+	and (mo.state == S_NIGHTSCORE100) then
+		mo.color = (leveltime%69) -- NICE
+		if (mo.fuse < TICRATE)
+			mo.flags2 = $ ^^ MF2_DONTDRAW
+		end
+	end
+end, MT_DUMMY)
+
 addHook("MobjMoveCollide", function(tmthing, thing)
 	if tmthing and tmthing.valid
 	and thing and thing.valid then
@@ -282,12 +296,32 @@ addHook("MobjRemoved", function(mobj)
 					P_AddPlayerScore(mobj.lastbumper.player, 100)
 					mobj.lastbumper.rock.fxtimer = 3*TICRATE/2
 					S_StartSound(mobj.lastbumper.rock, sfx_pointu)
+					
+					local dummy = P_SpawnMobj(mobj.lastbumper.rock.x, 
+												mobj.lastbumper.rock.y, 
+												mobj.lastbumper.rock.height/2 + mobj.lastbumper.rock.z, 
+												MT_DUMMY)
+					P_SetMobjStateNF(dummy, S_NIGHTSCORE100)
+					P_SetObjectMomZ(dummy, FRACUNIT, false)
+					dummy.fuse = 3*TICRATE
+					dummy.scalespeed = FRACUNIT/25
+					dummy.destscale = 2*FRACUNIT
 				end
 			else -- You died before your host.
 				if mobj.lastbumper and mobj.lastbumper.valid then
 					P_DamageMobj(mobj.target,mobj.lastbumper.rock,mobj.lastbumper,1,DMG_INSTAKILL) -- Kill your host
 					mobj.lastbumper.rock.fxtimer = 3*TICRATE/2
 					S_StartSound(mobj.lastbumper.rock, sfx_pointu)
+					
+					local dummy = P_SpawnMobj(mobj.lastbumper.rock.x, 
+												mobj.lastbumper.rock.y, 
+												mobj.lastbumper.rock.height/2 + mobj.lastbumper.rock.z, 
+												MT_DUMMY)
+					P_SetMobjStateNF(dummy, S_NIGHTSCORE100)
+					P_SetObjectMomZ(dummy, FRACUNIT, false)
+					dummy.fuse = 3*TICRATE
+					dummy.scalespeed = FRACUNIT/25
+					dummy.destscale = 2*FRACUNIT
 				else
 					P_DamageMobj(mobj.target,nil,nil,1,DMG_INSTAKILL) -- Kill your host
 				end

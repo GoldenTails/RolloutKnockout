@@ -72,7 +72,8 @@ cd $FOLDER_NAME
 #rm ../builds/$PK3_FULLNAME.pk3
 zip -FSr ../builds/$PK3_FULLNAME.pk3 $(echo $PK3_FILES | tr '\r\n' ' ')
 
-cd ..
-ln -sf builds/$PK3_FULLNAME.pk3 $PK3_NAME.pk3
+# No syn link for now... A bit redundant
+#cd ..
+#ln -sf builds/$PK3_FULLNAME.pk3 $PK3_NAME.pk3
 
 echo "Build is located at builds/$PK3_FULLNAME.pk3"
