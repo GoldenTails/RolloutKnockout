@@ -131,7 +131,7 @@ rawset(_G, "RK_WarnPlayersInRadius", function(mo, dist)
 		if (p.mo.rock == mo) then continue end -- Our rock? Skip us
 		
 		if (FixedHypot(FixedHypot(p.mo.x - mo.x, p.mo.y - mo.y), 
-									p.mo.z - mo.z) < 7*mo.radius) then
+									p.mo.z - mo.z) < 8*mo.radius) then
 			continue -- TOO CLOSE!!
 		end
 		
@@ -140,8 +140,8 @@ rawset(_G, "RK_WarnPlayersInRadius", function(mo, dist)
 		arw.angle = R_PointToAngle2(mo.x, mo.y, p.mo.x, p.mo.y) + ANGLE_180
 		arw.target = mo
 		arw.color = p.mo.color -- Opponent's color
-		P_TeleportMove(arw, mo.x + FixedMul(cos(arw.angle-ANGLE_180), 3*mo.radius),
-							mo.y + FixedMul(sin(arw.angle-ANGLE_180), 3*mo.radius),
+		P_TeleportMove(arw, mo.x + FixedMul(cos(arw.angle-ANGLE_180), 3*mo.radius + FixedMul(sin(FixedAngle((leveltime%45)*(8*FRACUNIT))), 4*FRACUNIT)),
+							mo.y + FixedMul(sin(arw.angle-ANGLE_180), 3*mo.radius + FixedMul(sin(FixedAngle((leveltime%45)*(8*FRACUNIT))), 4*FRACUNIT)),
 							mo.z + mo.height/2)
 		
 		-- Some fancy maths here
@@ -198,10 +198,10 @@ addHook("PlayerThink", function(player)
 			player.pflags = $|PF_JUMPSTASIS -- NO JUMP
 		end
 		
-		if not player.powers[pw_nocontrol] -- Have control?
+		/*if not player.powers[pw_nocontrol] -- Have control?
 		and not (player.powers[pw_carry] & CR_ROLLOUT) then -- Not on the rock?
 			P_DamageMobj(mo,nil,nil,1,DMG_INSTAKILL) -- Die
-		end
+		end*/
 				
 		if mapheaderinfo[gamemap].airdrown
 		and mo.state == S_PLAY_DEAD then
@@ -269,12 +269,12 @@ addHook("MobjThinker", function(mo)
                 P_InstaThrust(mo, slope.xydirection, FRACUNIT*2) -- Push the rock down the slope
             end
 			
-			/*-- Did your target player suddenly die?
+			-- Did your target player suddenly die?
 			if mo.target.player and mo.target.player.valid
 			and (mo.target.player.playerstate == PST_DEAD) then
 				P_RemoveMobj(mo) -- So should you!
 				return
-			end*/
+			end
         else -- Oops, your target dissappeared?
 			P_RemoveMobj(mo) -- So should you!
 			return
@@ -350,6 +350,7 @@ addHook("MobjRemoved", function(mobj)
 				and mobj.lastbumper.player.valid then -- Validity check
 					-- There would be occurances where your host dies before the rock disappears, and no points for score are awarded
 					-- This 'hopefully' fixes that.
+					--print("Player died before the Rock despawned!")
 					P_AddPlayerScore(mobj.lastbumper.player, 100)
 					mobj.lastbumper.rock.fxtimer = 3*TICRATE/2
 					S_StartSound(mobj.lastbumper.rock, sfx_pointu)
@@ -366,6 +367,7 @@ addHook("MobjRemoved", function(mobj)
 				end
 			else -- You died before your host.
 				if mobj.lastbumper and mobj.lastbumper.valid then
+					--print("Rock died before the player! Killing player!")
 					P_DamageMobj(mobj.target,mobj.lastbumper.rock,mobj.lastbumper,1,DMG_INSTAKILL) -- Kill your host
 					mobj.lastbumper.rock.fxtimer = 3*TICRATE/2
 					S_StartSound(mobj.lastbumper.rock, sfx_pointu)
@@ -387,7 +389,7 @@ addHook("MobjRemoved", function(mobj)
     end
 end, MT_ROLLOUTROCK)
 
-addHook("MobjDeath", function(mo)
+/*addHook("MobjDeath", function(mo)
 	-- Check to see if the player died before the rock despawned
 	if G_IsRolloutGametype() then
 		if mo and mo.valid
@@ -396,7 +398,7 @@ addHook("MobjDeath", function(mo)
 			P_RemoveMobj(mo.rock) -- If the rock still exists, remove it
 		end
 	end
-end, MT_PLAYER)
+end, MT_PLAYER)*/
 
 COM_AddCommand("rk_respawn", function(p)
 	if G_IsRolloutGametype() then
