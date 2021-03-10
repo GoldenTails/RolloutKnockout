@@ -97,6 +97,58 @@ rawset(_G, "spawnAura", function(mo, color)	-- spawn a aura around mo
 	end
 end)
 
+freeslot("S_RKAW1")
+freeslot("SPR_RKAW")
+states[S_RKAW1] = {SPR_RKAW, A|FF_FULLBRIGHT|FF_PAPERSPRITE, 2, nil, 0, 0, S_NULL}
+
+-- Search for other player objects around 'mo' and return the count.
+-- Because I hate 'searchBlockmap'
+-- Flame
+rawset(_G, "RK_SearchForPlayersInRadius", function(mo, dist)
+	local pcount = 0
+	if not mo or not mo.valid then return pcount end
+	for p in players.iterate do
+		if p.spectator then continue end -- We're a spectator. Skip.
+		if not p.mo then continue end -- Not a mo object. Skip.
+		if (p.mo.rock == mo) then continue end -- Our rock? Skip us
+		--if (p.playerstate != PST_DEAD) then continue end -- He's dead Jim... Skip.
+		if (FixedHypot(FixedHypot(p.mo.x - mo.x, p.mo.y - mo.y), 
+									p.mo.z - mo.z) > dist) then
+			continue -- Out of range
+		end
+		pcount = $ + 1
+	end
+	return pcount
+end)
+
+
+rawset(_G, "RK_WarnPlayersInRadius", function(mo, dist)
+	if not cv_rkarrows.value then return end
+	if not mo or not mo.valid then return end
+	for p in players.iterate
+		if p.spectator then continue end -- We're a spectator. Skip.
+		if not p.mo then continue end -- Not a mo object. Skip.
+		if (p.mo.rock == mo) then continue end -- Our rock? Skip us
+		
+		if (FixedHypot(FixedHypot(p.mo.x - mo.x, p.mo.y - mo.y), 
+									p.mo.z - mo.z) < 7*mo.radius) then
+			continue -- TOO CLOSE!!
+		end
+		
+		local arw = P_SpawnMobj(mo.x, mo.y, mo.z + mo.height/2, MT_DUMMY)
+		arw.state = S_RKAW1
+		arw.angle = R_PointToAngle2(mo.x, mo.y, p.mo.x, p.mo.y) + ANGLE_180
+		arw.target = mo
+		arw.color = p.mo.color -- Opponent's color
+		P_TeleportMove(arw, mo.x + FixedMul(cos(arw.angle-ANGLE_180), 3*mo.radius),
+							mo.y + FixedMul(sin(arw.angle-ANGLE_180), 3*mo.radius),
+							mo.z + mo.height/2)
+		
+		-- Some fancy maths here
+		arw.scale = FixedDiv(FixedMul(FRACUNIT, dist), R_PointToDist2(mo.x, mo.y, p.mo.x, p.mo.y))/2
+	end
+end)
+
 rawset(_G, "G_IsRolloutGametype", function()
 	return (gametype == GT_ROLLOUT)-- or (gametype == GT_RROLLOUT)
 end)
@@ -232,6 +284,11 @@ addHook("MobjThinker", function(mo)
 			mo.fxtimer = $ - 1
 			spawnAura(mo, mo.color)
 		end
+		
+		local pcdist = 512*FRACUNIT
+		if RK_SearchForPlayersInRadius(mo, pcdist) then
+			RK_WarnPlayersInRadius(mo, pcdist)
+		end
     end
 end, MT_ROLLOUTROCK)
 
@@ -340,6 +397,24 @@ addHook("MobjDeath", function(mo)
 		end
 	end
 end, MT_PLAYER)
+
+COM_AddCommand("rk_respawn", function(p)
+	if G_IsRolloutGametype() then
+		if p and p.valid
+			p.playerstate = PST_REBORN
+		end
+	else
+		CONS_Printf(p, "Sorry. This command can only be used in Rollout Knockout maps!")
+	end
+end)
+
+rawset(_G, "cv_rkarrows", CV_RegisterVar({
+	name = "rk_arrows",
+	defaultvalue = 1,
+	flags = 0,
+	PossibleValue = CV_YesNo,
+	Func = 0,
+}))
 
 rawset(_G, "RolloutHudToggle", function()
 	if G_IsRolloutGametype()
