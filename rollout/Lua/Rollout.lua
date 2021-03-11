@@ -7,13 +7,14 @@ freeslot("sfx_pointu")
 sfxinfo[sfx_pointu].caption = "Point up!"
 
 G_AddGametype({
-    name = "Rollout Knockout",
-    identifier = "ROLLOUT",
-    typeoflevel = TOL_ROLLOUT,
-    rules = GTR_SPECTATORS|GTR_HURTMESSAGES|GTR_NOSPECTATORSPAWN|GTR_DEATHMATCHSTARTS|GTR_TIMELIMIT,
-    intermissiontype = int_match,
+	name = "Rollout Knockout",
+	identifier = "ROLLOUT",
+	typeoflevel = TOL_ROLLOUT,
+	rules = GTR_SPECTATORS|GTR_HURTMESSAGES|GTR_NOSPECTATORSPAWN|GTR_DEATHMATCHSTARTS|GTR_TIMELIMIT,
+	intermissiontype = int_match,
 	rankingtype = GT_MATCH,
-    headercolor = 148,
+	defaulttimelimit = 5,
+	headercolor = 148,
 	description = "You and your opponents are all on rocks, whaddya do? Knock them off the area, of course!"
 })
 
@@ -169,12 +170,14 @@ addHook("PlayerSpawn", function(player)
 		player.powers[pw_nocontrol] = TICRATE/3
 		local rheight = mobjinfo[MT_ROLLOUTROCK].height -- Rock Height
 		P_TeleportMove(player.mo, player.mo.x, player.mo.y, player.mo.z + rheight + 5*FRACUNIT) -- Offset to be above the rock slightly
+
 		player.mo.rock = P_SpawnMobj(player.mo.x, player.mo.y, player.mo.floorz, MT_ROLLOUTROCK) -- Spawn rock on the player's current floorz
 		player.mo.rock.target = player.mo -- Target the player that spawned you. See "MobjThinker"
+		player.mo.rock.colorized = true
 		if not (mapheaderinfo[gamemap].rockfloat) then
 			player.mo.rock.flags2 = $ | MF2_AMBUSH
 		end
-		player.mo.rock.colorized = true
+		player.ingametime = 0
 	end
 end)
 
@@ -186,6 +189,12 @@ addHook("PreThinkFrame", do
 	end
 end)
 
+addHook("JumpSpecial", function(p)
+	if G_IsRolloutGametype() then
+		return (p.powers[pw_carry] & CR_ROLLOUT)
+	end
+end)
+
 addHook("PlayerThink", function(player)
 	if G_IsRolloutGametype()
 	and (player.mo and player.mo.valid) 
@@ -193,32 +202,27 @@ addHook("PlayerThink", function(player)
 		local cmd = player.cmd
 		local mo = player.mo
 		
-		-- On the rock?
-		if (player.powers[pw_carry] & CR_ROLLOUT) then
-			player.pflags = $|PF_JUMPSTASIS -- NO JUMP
+		if (player.playerstate == PST_LIVE) then
+			player.ingametime = $ + 1
 		end
 		
-		/*if not player.powers[pw_nocontrol] -- Have control?
-		and not (player.powers[pw_carry] & CR_ROLLOUT) then -- Not on the rock?
-			P_DamageMobj(mo,nil,nil,1,DMG_INSTAKILL) -- Die
-		end*/
-				
-		if mapheaderinfo[gamemap].airdrown
-		and mo.state == S_PLAY_DEAD then
-			mo.state = S_PLAY_DRWN
-			S_StartSound(mo,sfx_drown)
+		-- Respawn failsafe
+		if (player.ingametime < 2*TICRATE)
+		and player.mo.rock and player.mo.rock.bumpcount
+		and (player.mo.rock.bumpcount > 15) then
+			player.playerstate = PST_REBORN
 		end
 		
-		if (cmd.buttons & BT_ATTACK) and not (player.pflags & PF_ATTACKDOWN) -- Pressing the attack button
+		if (cmd.buttons & BT_ATTACK) and not (player.pflags & PF_ATTACKDOWN) then -- Pressing the attack button
 			player.pflags = $ | PF_ATTACKDOWN
 			--if (p.currentweapon == WEP_AUTO) -- Automatic Ring (Speed Burst) selected
 			--and (p.ringweapons & RW_AUTO) -- Weapon ring able to be fired
 			--and (p.powers[pw_automaticring] > 0) -- Player has Auto rings to spare?
 			--and (p.weapondelay <= 4)
-			if (player.weapondelay <= 4)
+			if (player.weapondelay <= 4) then
 				-- Let's give your character a dashing ability
 				--p.pflags = $ & ~PF_ATTACKDOWN -- Attack is repeatable
-				if not player.powers[pw_flashing] and not player.powers[pw_sneakers] -- Just starting from a dash...
+				if not player.powers[pw_flashing] and not player.powers[pw_sneakers] then -- Just starting from a dash...
 					player.powers[pw_flashing] = TICRATE/3
 					S_StopSound(mo)
 					--S_StartSound(mo, sfx_mswarp) -- Zoom!
@@ -227,7 +231,7 @@ addHook("PlayerThink", function(player)
 				player.powers[pw_sneakers] = TICRATE
 				player.powers[pw_nocontrol] = TICRATE/2
 				player.weapondelay = 3*TICRATE
-				if mo.rock and mo.rock.valid
+				if mo.rock and mo.rock.valid then
 					P_InstaThrust(mo.rock, mo.angle, player.normalspeed/2)
 					P_SetObjectMomZ(mo.rock, 5*FRACUNIT, true)
 				else
@@ -240,7 +244,7 @@ addHook("PlayerThink", function(player)
 		if mo.rock and mo.rock.valid
 		and not P_IsObjectOnGround(mo.rock)
 		and ((leveltime%3) == 0)
-		and player.powers[pw_sneakers]
+		and player.powers[pw_sneakers] then
 			P_SpawnGhostMobj(mo)
 		end
 	end
@@ -252,29 +256,37 @@ addHook("MobjThinker", function(mo)
 		if mo.target and mo.target.valid then -- Valid target
 			-- Last bumper for score calculation
 			if mo.lastbumper and (mo.lastbumpertics > 0) then
-				mo.lastbumpertics = $ - 1 -- Tic countdown timer
+				mo.lastbumpertics = $ - 1
 				if (mo.lastbumpertics == 1) then -- Last tic
 					mo.lastbumper = nil -- Nil out your last bumper
 				end
 			end
 
-			-- Set your color to your target
-			if mo.colorized then
-                mo.color = mo.target.color
-            end
-			
-            if mo.standingslope -- On a slope
-			and (mapheaderinfo[gamemap].slopefall) then
-                local slope = mo.standingslope -- Simplify ourselves
-                P_InstaThrust(mo, slope.xydirection, FRACUNIT*2) -- Push the rock down the slope
-            end
-			
+			-- Bump count for Player Respawning
+			mo.bumpcount = $ or 0
+			if mo.bumpcount and (mo.bumpcounttics > 0) then
+				mo.bumpcounttics = $ - 1
+				if (mo.bumpcounttics == 1) then -- Last tic
+					mo.bumpcount = 0 -- Reset the bump count
+				end
+			end
+
 			-- Did your target player suddenly die?
 			if mo.target.player and mo.target.player.valid
 			and (mo.target.player.playerstate == PST_DEAD) then
 				P_RemoveMobj(mo) -- So should you!
 				return
 			end
+
+			-- Set your color to your target
+			if mo.colorized then mo.color = mo.target.color end
+			
+			-- On a slope
+            if mo.standingslope
+			and (mapheaderinfo[gamemap].slopefall) then
+                local slope = mo.standingslope -- Simplify ourselves
+                P_InstaThrust(mo, slope.xydirection, FRACUNIT*2) -- Push the rock down the slope
+            end
         else -- Oops, your target dissappeared?
 			P_RemoveMobj(mo) -- So should you!
 			return
@@ -297,11 +309,24 @@ addHook("MobjThinker", function(mo)
     and G_IsRolloutGametype() 
 	and (mo.state == S_NIGHTSCORE100) then
 		mo.color = (leveltime%69) -- NICE
-		if (mo.fuse < TICRATE)
-			mo.flags2 = $ ^^ MF2_DONTDRAW
-		end
+		if (mo.fuse < TICRATE) then mo.flags2 = $ ^^ MF2_DONTDRAW end
 	end
 end, MT_DUMMY)
+
+addHook("MobjCollide", function(thing, tmthing)
+	if thing and thing.valid
+	and tmthing and tmthing.valid then
+		if (thing.z > (tmthing.z + tmthing.height)) -- No Z collision? Let's fix that!
+		or ((thing.z + thing.height) < tmthing.z) then
+			return -- Out of range
+		end
+		
+		if (thing.type == MT_ROLLOUTROCK) and (tmthing.type == MT_ROLLOUTROCK) then
+			thing.bumpcount = $ + 1
+			thing.bumpcounttics = TICRATE/2
+		end
+	end
+end, MT_ROLLOUTROCK)
 
 addHook("MobjMoveCollide", function(tmthing, thing)
 	if tmthing and tmthing.valid
@@ -318,7 +343,7 @@ addHook("MobjMoveCollide", function(tmthing, thing)
 			if tmthing.target and tmthing.target.valid then
 				-- Collision! for points!
 				thing.lastbumper = tmthing.target
-				thing.lastbumpertics = 10 * TICRATE -- 10 second cooldown
+				thing.lastbumpertics = 10*TICRATE -- 10 second cooldown
 			end
 
 			-- This following bit may seem backwards, but it's not
@@ -402,9 +427,7 @@ end, MT_PLAYER)*/
 
 COM_AddCommand("rk_respawn", function(p)
 	if G_IsRolloutGametype() then
-		if p and p.valid
-			p.playerstate = PST_REBORN
-		end
+		if p and p.valid then p.playerstate = PST_REBORN end
 	else
 		CONS_Printf(p, "Sorry. This command can only be used in Rollout Knockout maps!")
 	end
