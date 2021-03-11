@@ -357,8 +357,6 @@ addHook("MobjMoveCollide", function(tmthing, thing)
 end, MT_ROLLOUTROCK) -- Our tmthing
 
 addHook("MobjRemoved", function(mobj)
-	-- Check to see if the rock was removed right from underneath the player.
-	-- Eg. Rock despawned but player still exists
 	if G_IsRolloutGametype() then
 		if mobj and mobj.valid -- Valid check
 		and mobj.target -- Do you have a target?
@@ -391,7 +389,8 @@ addHook("MobjRemoved", function(mobj)
 					dummy.destscale = 2*FRACUNIT
 				end
 			else -- You died before your host.
-				if mobj.lastbumper and mobj.lastbumper.valid then
+				if mobj.lastbumper and mobj.lastbumper.valid
+				and mobj.lastbumper.rock and mobj.lastbumper.rock.valid then
 					--print("Rock died before the player! Killing player!")
 					P_DamageMobj(mobj.target,mobj.lastbumper.rock,mobj.lastbumper,1,DMG_INSTAKILL) -- Kill your host
 					mobj.lastbumper.rock.fxtimer = 3*TICRATE/2
@@ -406,6 +405,9 @@ addHook("MobjRemoved", function(mobj)
 					dummy.fuse = 3*TICRATE
 					dummy.scalespeed = FRACUNIT/25
 					dummy.destscale = 2*FRACUNIT
+				elseif mobj.lastbumper and mobj.lastbumper.valid then
+					-- Goto: HURTMSG Hook for this
+					P_DamageMobj(mobj.target,mobj.lastbumper,mobj.lastbumper,1,DMG_INSTAKILL) -- Kill your host
 				else
 					P_DamageMobj(mobj.target,nil,nil,1,DMG_INSTAKILL) -- Kill your host
 				end
@@ -413,6 +415,24 @@ addHook("MobjRemoved", function(mobj)
 		end
     end
 end, MT_ROLLOUTROCK)
+
+-- HurtMsg hook to replace the default "x's tagging hand killed y" Message
+addHook("HurtMsg", function(p, i, s)
+	if G_IsRolloutGametype() then
+		if not p or not p.valid then return end
+		if not i or not i.valid then return end
+		if not s or not s.valid then return end
+		
+		if s and (s.type == MT_PLAYER) and s.player then
+			CONS_Printf(p,s.player.name.." killed "..p.name)
+			return true
+		else
+			return false
+		end
+	else
+		return false
+	end
+end, MT_PLAYER)
 
 /*addHook("MobjDeath", function(mo)
 	-- Check to see if the player died before the rock despawned

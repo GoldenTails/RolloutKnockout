@@ -65,6 +65,7 @@ PK3_FILES=${PK3_FILES:-$(cat <<-END
 	Lua/*
 	SOC/*
 	Sprites/*
+	Audio/*
 END
 )}
 
