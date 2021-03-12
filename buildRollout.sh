@@ -18,6 +18,8 @@ testCmd "ln";
 PK3_FLAGS=${PK3_FLAGS:-$PK3_FLAGS_DEF}
 PK3_VERSION=${PK3_VERSION:-$PK3_VERSION_DEF}
 PK3_NAME=${PK3_NAME:-$PK3_NAME_DEF}
+PK3_FILES=${PK3_FILES:-$PK3_FILES_DEF}
+
 FOLDER_NAME=${FOLDER_NAME:-$FOLDER_NAME_DEF}
 
 PK3_FULLNAME="$PK3_FLAGS"_"$PK3_NAME"-"$PK3_VERSION"
@@ -45,11 +47,8 @@ if [[ "$*" == *"cleanbuilds"* ]]; then
 fi
 
 if [[ ! $PK3_RELEASE ]]; then
-	if [[ "$*" == *"discord"* ]]; then
-		PK3_TIME=$(date +"%m.%d.%y-%H.%M.%S")
-
-		PK3_METADATA="$PK3_COMMIT"_"$PK3_TIME"
-		PK3_FULLNAME="$PK3_FULLNAME"-discord_"$PK3_METADATA"
+	if [[ "$*" == *"testbuild"* ]]; then
+		PK3_FULLNAME="$PK3_FULLNAME"-test_"$PK3_COMMIT"
 	else
 		PK3_TIME=$(date +"%m.%d.%y-%H.%M.%S")
 
@@ -58,20 +57,14 @@ if [[ ! $PK3_RELEASE ]]; then
 	fi
 fi
 
-PK3_FILES=${PK3_FILES:-$(cat <<-END
-	init.lua
-	README.txt
-	Maps/*
-	Lua/*
-	SOC/*
-	Sprites/*
-	Audio/*
-END
-)}
-
 cd $FOLDER_NAME
 #rm ../builds/$PK3_FULLNAME.pk3
-zip -FSr ../builds/$PK3_FULLNAME.pk3 $(echo $PK3_FILES | tr '\r\n' ' ')
+
+# grab newline-seperated files from rollout folder, seperate by newline into array $ARGS
+readarray -td$'\n' ARGS <<<"$(find)"
+# declare -p ARGS
+
+zip -FSr ../builds/$PK3_FULLNAME.pk3 $ARGS
 
 # No syn link for now... A bit redundant
 #cd ..
