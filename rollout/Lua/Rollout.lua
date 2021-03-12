@@ -255,11 +255,15 @@ addHook("MobjThinker", function(mo)
     and G_IsRolloutGametype() then
 		if mo.target and mo.target.valid then -- Valid target
 			-- Last bumper for score calculation
-			if mo.lastbumper and (mo.lastbumpertics > 0) then
+			if mo.lastbumper and mo.lastbumper.valid -- Validity check
+			and (mo.lastbumpertics > 0) then
 				mo.lastbumpertics = $ - 1
 				if (mo.lastbumpertics == 1) then -- Last tic
 					mo.lastbumper = nil -- Nil out your last bumper
 				end
+			else -- mo.lastbumper not valid
+				mo.lastbumpertics = 0
+				mo.lastbumper = nil -- Nil out your last bumper
 			end
 
 			-- Bump count for Player Respawning
@@ -278,8 +282,18 @@ addHook("MobjThinker", function(mo)
 				return
 			end
 
-			-- Set your color to your target
-			if mo.colorized then mo.color = mo.target.color end
+			-- Your ball is colored!
+			if mo.colorized then
+				-- If you have a lastbumper, set your color to your lastbumper for a bit!
+				if mo.lastbumper and mo.lastbumper.valid
+				and (mo.lastbumpertics > 9*TICRATE)
+				and not (leveltime%2) then
+					mo.color = mo.lastbumper.color
+				else
+					-- Otherwise, set your color to your target
+					mo.color = mo.target.color
+				end
+			end
 			
 			-- On a slope
             if mo.standingslope
@@ -304,6 +318,7 @@ addHook("MobjThinker", function(mo)
     end
 end, MT_ROLLOUTROCK)
 
+-- Score object
 addHook("MobjThinker", function(mo)
     if mo and mo.valid
     and G_IsRolloutGametype() 
@@ -313,6 +328,7 @@ addHook("MobjThinker", function(mo)
 	end
 end, MT_DUMMY)
 
+-- Rock v rock
 addHook("MobjCollide", function(thing, tmthing)
 	if thing and thing.valid
 	and tmthing and tmthing.valid then
@@ -328,6 +344,7 @@ addHook("MobjCollide", function(thing, tmthing)
 	end
 end, MT_ROLLOUTROCK)
 
+-- Moving rock v rock
 addHook("MobjMoveCollide", function(tmthing, thing)
 	if tmthing and tmthing.valid
 	and thing and thing.valid then
@@ -352,10 +369,16 @@ addHook("MobjMoveCollide", function(tmthing, thing)
 			else
 				FreeSetZ(tmthing, thing.z)
 			end
+			
+			-- If I need to play around with the collision intensity... this works...
+			--thing.momx = 2*tmthing.momx
+			--thing.momy = 2*tmthing.momy
+			--return true
 		end
 	end
 end, MT_ROLLOUTROCK) -- Our tmthing
 
+-- Rock removed
 addHook("MobjRemoved", function(mobj)
 	if G_IsRolloutGametype() then
 		if mobj and mobj.valid -- Valid check
@@ -423,8 +446,9 @@ addHook("HurtMsg", function(p, i, s)
 		if not i or not i.valid then return end
 		if not s or not s.valid then return end
 		
-		if s and (s.type == MT_PLAYER) and s.player then
-			CONS_Printf(p,s.player.name.." killed "..p.name)
+		if (i.type == MT_PLAYER) and i.player
+		and (s.type == MT_PLAYER) and s.player then
+			CONS_Printf(p,s.player.name.." killed "..p.name..".")
 			return true
 		else
 			return false
