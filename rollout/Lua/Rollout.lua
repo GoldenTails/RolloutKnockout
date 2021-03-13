@@ -106,21 +106,42 @@ rawset(_G, "spawnAura", function(mo, color)	-- spawn a aura around mo
 	end
 end)
 
+-- Arrows!
 freeslot("S_RKAW1")
 freeslot("SPR_RKAW")
 states[S_RKAW1] = {SPR_RKAW, A|FF_FULLBRIGHT|FF_PAPERSPRITE, 2, nil, 0, 0, S_NULL}
+rawset(_G, "RK_SpawnArrow", function(mo, target, dist)
+	-- Need both a source 'mo' and a target 'mo'
+	if not mo or not mo.valid then return end
+	if not target or not target.valid then return end
+	
+	local arw = P_SpawnMobj(mo.x, mo.y, mo.z + mo.height/2, MT_DUMMY)
+	arw.state = S_RKAW1
+	arw.angle = R_PointToAngle2(mo.x, mo.y, target.x, target.y) + ANGLE_180
+	arw.target = mo
+	arw.color = target.color or SKINCOLOR_GREEN -- Opponent's color
+	-- Fancy maths. Ensure your papersprite angle points towards your opponent.
+	local ft = FixedAngle((leveltime%45)*(8*FRACUNIT))
+	P_TeleportMove(arw, mo.x + FixedMul(cos(arw.angle-ANGLE_180), 3*mo.radius + FixedMul(sin(ft), 4*FRACUNIT)),
+						mo.y + FixedMul(sin(arw.angle-ANGLE_180), 3*mo.radius + FixedMul(sin(ft), 4*FRACUNIT)),
+						mo.z + mo.height/2)
+
+	-- Some more fancy maths. Grow/shrink according to your target's distance
+	arw.scale = FixedDiv(FixedMul(FRACUNIT, dist), R_PointToDist2(mo.x, mo.y, target.x, target.y))/2
+end)
 
 -- Search for other player objects around 'mo' and return the count.
 -- Because I hate 'searchBlockmap'
 -- Flame
-rawset(_G, "RK_SearchForPlayersInRadius", function(mo, dist)
+/*rawset(_G, "RK_CountPlayersInRadius", function(mo, dist)
 	local pcount = 0
 	if not mo or not mo.valid then return pcount end
 	for p in players.iterate do
 		if p.spectator then continue end -- We're a spectator. Skip.
+		if (p.playerstate ~= PST_LIVE) continue end -- Skip anyone not alive
 		if not p.mo then continue end -- Not a mo object. Skip.
+		if not p.mo.rock or not p.mo.rock.valid then continue end -- No rock to reference. Skip.
 		if (p.mo.rock == mo) then continue end -- Our rock? Skip us
-		--if (p.playerstate != PST_DEAD) then continue end -- He's dead Jim... Skip.
 		if (FixedHypot(FixedHypot(p.mo.x - mo.x, p.mo.y - mo.y), 
 									p.mo.z - mo.z) > dist) then
 			continue -- Out of range
@@ -128,33 +149,51 @@ rawset(_G, "RK_SearchForPlayersInRadius", function(mo, dist)
 		pcount = $ + 1
 	end
 	return pcount
-end)
+end)*/
 
-
-rawset(_G, "RK_WarnPlayersInRadius", function(mo, dist)
-	if not cv_rkarrows.value then return end
+rawset(_G, "RK_SearchForPlayersInRadius", function(mo, dist, avar)
+	if not avar then return end -- Now arrows to display, stop here!
 	if not mo or not mo.valid then return end
-	for p in players.iterate
-		if p.spectator then continue end -- We're a spectator. Skip.
-		if not p.mo then continue end -- Not a mo object. Skip.
-		if (p.mo.rock == mo) then continue end -- Our rock? Skip us
-		
-		if (FixedHypot(FixedHypot(p.mo.x - mo.x, p.mo.y - mo.y), 
-									p.mo.z - mo.z) < 8*mo.radius) then
-			continue -- TOO CLOSE!!
+	
+	local closestmo = nil
+	local closestdist = dist -- Maximum possible distance to search.
+	if (avar == 2) then -- Spawn arrows for all players around you
+		for p in players.iterate
+			if p.spectator then continue end -- We're a spectator. Skip.
+			if (p.playerstate ~= PST_LIVE) continue end -- Skip anyone not alive
+			if not p.mo then continue end -- Not a mo object. Skip.
+			if not p.mo.rock or not p.mo.rock.valid then continue end -- No rock to reference. Skip.
+			if (p.mo.rock == mo) then continue end -- Our rock? Skip us
+			
+			local idist = FixedHypot(FixedHypot(p.mo.rock.x - mo.x, p.mo.rock.y - mo.y), p.mo.rock.z - mo.z)
+			if (idist < 8*mo.radius) then
+				continue -- TOO CLOSE!!
+			end
+			
+			RK_SpawnArrow(mo, p.mo, dist)
+		end
+	elseif (avar == 1) then -- Spawn arrows for the closest player seen
+		for p in players.iterate
+			if p.spectator then continue end -- We're a spectator. Skip.
+			if (p.playerstate ~= PST_LIVE) continue end -- Skip anyone not alive
+			if not p.mo then continue end -- Not a mo object. Skip.
+			if not p.mo.rock or not p.mo.rock.valid then continue end -- No rock to reference. Skip.
+			if (p.mo.rock == mo) then continue end -- Our rock? Skip us
+			
+			local idist = FixedHypot(FixedHypot(p.mo.rock.x - mo.x, p.mo.rock.y - mo.y), p.mo.rock.z - mo.z)
+			if (idist < 8*mo.radius) then
+				return -- TOO CLOSE!! (Don't process anything else)
+			end
+			
+			if (idist < closestdist) then -- There's a mobj that's closer?
+				closestmo = p.mo -- Then we're the real closest player mobj!
+				closestdist = idist
+			end
 		end
 		
-		local arw = P_SpawnMobj(mo.x, mo.y, mo.z + mo.height/2, MT_DUMMY)
-		arw.state = S_RKAW1
-		arw.angle = R_PointToAngle2(mo.x, mo.y, p.mo.x, p.mo.y) + ANGLE_180
-		arw.target = mo
-		arw.color = p.mo.color -- Opponent's color
-		P_TeleportMove(arw, mo.x + FixedMul(cos(arw.angle-ANGLE_180), 3*mo.radius + FixedMul(sin(FixedAngle((leveltime%45)*(8*FRACUNIT))), 4*FRACUNIT)),
-							mo.y + FixedMul(sin(arw.angle-ANGLE_180), 3*mo.radius + FixedMul(sin(FixedAngle((leveltime%45)*(8*FRACUNIT))), 4*FRACUNIT)),
-							mo.z + mo.height/2)
-		
-		-- Some fancy maths here
-		arw.scale = FixedDiv(FixedMul(FRACUNIT, dist), R_PointToDist2(mo.x, mo.y, p.mo.x, p.mo.y))/2
+		if closestmo
+			RK_SpawnArrow(mo, closestmo, dist)
+		end
 	end
 end)
 
@@ -320,9 +359,7 @@ addHook("MobjThinker", function(mo)
 		end
 		
 		local pcdist = 512*FRACUNIT
-		if RK_SearchForPlayersInRadius(mo, pcdist) then
-			RK_WarnPlayersInRadius(mo, pcdist)
-		end
+		RK_SearchForPlayersInRadius(mo, pcdist, cv_rkarrows.value)
     end
 end, MT_ROLLOUTROCK)
 
@@ -495,7 +532,7 @@ rawset(_G, "cv_rkarrows", CV_RegisterVar({
 	name = "rk_arrows",
 	defaultvalue = 1,
 	flags = 0,
-	PossibleValue = CV_YesNo,
+	PossibleValue = {MIN = 0, MAX = 2},
 	Func = 0,
 }))
 
