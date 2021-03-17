@@ -236,62 +236,162 @@ addHook("PreThinkFrame", do
 	end
 end)
 
+rawset(_G, "RK_DrainAmmo", function(p, power, amount)
+	if power and amount then
+		-- Drain power by specific amount
+		p.powers[power] = $ - amount
+		p.rings = $ - amount
+		if (p.powers[power] < 0) then p.powers[power] = 0 end
+	elseif power and not amount then
+		-- Drain power by default amount (1)
+		p.powers[power] = $ - 1
+		p.rings = $ - 1
+		if (p.powers[power] < 0) then p.powers[power] = 0 end
+	elseif amount and not power then
+		-- Drain rings by specific amount
+		p.rings = $ - amount
+		if (p.rings < 0) then p.rings = 0 end
+	else
+		-- Drain power by default amount (1)
+		p.rings = $ - 1
+		if (p.rings < 0) then p.rings = 0 end
+	end
+	if (p.rings < 0) then p.rings = 0 end
+	
+	-- Copied from SRB2 Source
+	/*if (p.rings < 1)
+		p.ammoremovalweapon = p.currentweapon
+		p.ammoremovaltimer = ammoremovaltics -- 2*TICRATE
+		
+		if (p.powers[power] > 0)
+			p.powers[power] = $ - 1
+			p.ammoremoval = 2
+		else
+			p.ammoremoval = 1
+		end
+	else
+		p.rings = $ - 1
+	end*/
+end)
+
 addHook("JumpSpecial", function(p)
 	if G_IsRolloutGametype() then
-		return (p.powers[pw_carry] & CR_ROLLOUT)
+		if p.mo and p.mo.valid
+			local mo = p.mo
+			if P_IsObjectOnGround(mo.rock) and not (p.pflags & PF_JUMPDOWN) then -- Pressing the attack button
+				p.pflags = $ | PF_JUMPDOWN
+				
+				if not p.currentweapon -- No weapon selected
+				and (p.weapondelay <= 2) then -- Not on cooldown
+					-- Let's give your character a dashing ability
+					if not p.powers[pw_flashing] and not p.powers[pw_sneakers] then -- Just starting from a dash...
+						p.powers[pw_flashing] = TICRATE/3
+						S_StopSound(mo)
+						--S_StartSound(mo, sfx_mswarp) -- Zoom!
+						S_StartSound(mo, sfx_s3kb6) -- Spin Launch
+					end
+					
+					p.powers[pw_sneakers] = (3*TICRATE)/4
+					p.powers[pw_nocontrol] = TICRATE/2
+					p.weapondelay = (3*TICRATE)
+					if mo.rock and mo.rock.valid then
+						P_InstaThrust(mo.rock, mo.angle, p.normalspeed/2)
+						P_SetObjectMomZ(mo.rock, 5*FRACUNIT, true)
+					end
+
+				elseif (p.currentweapon == WEP_AUTO) -- Automatic Ring
+				and (p.ringweapons & RW_AUTO) -- Weapon ring able to be fired
+				and (p.powers[pw_automaticring] > 0) -- Player has Auto rings to spare?
+				and (p.weapondelay <= 2) then -- Not on cooldown
+					-- Code
+					RK_DrainAmmo(p, pw_automaticring) -- Decrease your weapon ring count by one
+					--S_StartSound(mo, sfx_antiri) -- Play a sound...
+					S_StartSound(mo.target, sfx_kc65)
+					p.weapondelay = 5*TICRATE -- Cooldown
+					CONS_Printf(p, "Ability not implemented yet!")
+					
+				elseif (p.currentweapon == WEP_BOUNCE) -- Automatic Ring
+				and (p.ringweapons & RW_BOUNCE) -- Weapon ring able to be fired
+				and (p.powers[pw_bouncering] > 0) -- Player has Auto rings to spare?
+				and (p.weapondelay <= 2) then -- Not on cooldown
+					-- Code
+					RK_DrainAmmo(p, pw_bouncering) -- Decrease your weapon ring count by one
+					--S_StartSound(mo, sfx_antiri) -- Play a sound...
+					S_StartSound(mo.target, sfx_kc65)
+					p.weapondelay = 5*TICRATE -- Cooldown
+					CONS_Printf(p, "Ability not implemented yet!")
+					
+				elseif (p.currentweapon == WEP_SCATTER) -- Scatter Ring
+				and (p.ringweapons & RW_SCATTER) -- Weapon ring able to be fired
+				and (p.powers[pw_scatterring] > 0) -- Player has Scatter rings to spare?
+				and (p.weapondelay <= 2) then -- Not on cooldown
+					-- Code
+					RK_DrainAmmo(p, pw_scatterring) -- Decrease your weapon ring count by one
+					--S_StartSound(mo, sfx_antiri) -- Play a sound...
+					S_StartSound(mo.target, sfx_kc65)
+					p.weapondelay = 5*TICRATE -- Cooldown
+					CONS_Printf(p, "Ability not implemented yet!")
+					
+				elseif (p.currentweapon == WEP_GRENADE) -- Grenade Ring
+				and (p.ringweapons & RW_GRENADE) -- Weapon ring able to be fired
+				and (p.powers[pw_grenadering] > 0) -- Player has Scatter rings to spare?
+				and (p.weapondelay <= 2) then -- Not on cooldown
+					-- Code
+					RK_DrainAmmo(p, pw_grenadering) -- Decrease your weapon ring count by one
+					--S_StartSound(mo, sfx_antiri) -- Play a sound...
+					S_StartSound(mo.target, sfx_kc65)
+					p.weapondelay = 5*TICRATE -- Cooldown
+					CONS_Printf(p, "Ability not implemented yet!")
+					
+				elseif (p.currentweapon == WEP_EXPLODE) -- Explosion Ring
+				and (p.ringweapons & RW_EXPLODE) -- Weapon ring able to be fired
+				and (p.powers[pw_explosionring] > 0) -- Player has Scatter rings to spare?
+				and (p.weapondelay <= 2) then -- Not on cooldown
+					-- Code
+					RK_DrainAmmo(p, pw_explosionring) -- Decrease your weapon ring count by one
+					--S_StartSound(mo, sfx_antiri) -- Play a sound...
+					S_StartSound(mo.target, sfx_kc65)
+					p.weapondelay = 5*TICRATE -- Cooldown
+					CONS_Printf(p, "Ability not implemented yet!")
+					
+				elseif (p.currentweapon == WEP_RAIL) -- Rail ring
+				and (p.ringweapons & RW_RAIL) -- Weapon ring able to be fired
+				and (p.powers[pw_railring] > 0) -- Player has Rail rings to spare?
+				and (p.weapondelay <= 2) then -- Not on cooldown
+					-- Code
+					RK_DrainAmmo(p, pw_railring) -- Decrease your weapon ring count by one
+					--S_StartSound(mo, sfx_antiri) -- Play a sound...
+					S_StartSound(mo.target, sfx_kc65)
+					p.weapondelay = 5*TICRATE -- Cooldown
+					CONS_Printf(p, "Ability not implemented yet!")
+					
+				end
+				
+			end
+		end
+		return true
+	else
+		return false
 	end
 end)
 
-addHook("PlayerThink", function(player)
+addHook("PlayerThink", function(p)
 	if G_IsRolloutGametype()
-	and (player.mo and player.mo.valid) 
-	and player.playerstate ~= PST_DEAD then
-		local cmd = player.cmd
-		local mo = player.mo
-		
-		if (player.playerstate == PST_LIVE) then
-			player.ingametime = $ + 1
-		end
+	and (p.mo and p.mo.valid)
+	and (p.mo.rock and p.mo.rock.valid)
+	and p.playerstate ~= PST_DEAD then
+		local mo = p.mo
+		if (p.playerstate == PST_LIVE) then p.ingametime = $ + 1 end
 		
 		-- Respawn failsafe
-		if (player.ingametime < 2*TICRATE)
-		and player.mo.rock and player.mo.rock.bumpcount
-		and (player.mo.rock.bumpcount > 15) then
-			player.playerstate = PST_REBORN
+		if (p.ingametime < 2*TICRATE)
+		and p.mo.rock.bumpcount and (p.mo.rock.bumpcount > 15) then
+			p.playerstate = PST_REBORN
 		end
 		
-		if (cmd.buttons & BT_ATTACK) and not (player.pflags & PF_ATTACKDOWN) then -- Pressing the attack button
-			player.pflags = $ | PF_ATTACKDOWN
-			--if (p.currentweapon == WEP_AUTO) -- Automatic Ring (Speed Burst) selected
-			--and (p.ringweapons & RW_AUTO) -- Weapon ring able to be fired
-			--and (p.powers[pw_automaticring] > 0) -- Player has Auto rings to spare?
-			--and (p.weapondelay <= 4)
-			if (player.weapondelay <= 4) then
-				-- Let's give your character a dashing ability
-				--p.pflags = $ & ~PF_ATTACKDOWN -- Attack is repeatable
-				if not player.powers[pw_flashing] and not player.powers[pw_sneakers] then -- Just starting from a dash...
-					player.powers[pw_flashing] = TICRATE/3
-					S_StopSound(mo)
-					--S_StartSound(mo, sfx_mswarp) -- Zoom!
-					S_StartSound(mo, sfx_s3kb6) -- Spin Launch
-				end
-				player.powers[pw_sneakers] = TICRATE
-				player.powers[pw_nocontrol] = TICRATE/2
-				player.weapondelay = 3*TICRATE
-				if mo.rock and mo.rock.valid then
-					P_InstaThrust(mo.rock, mo.angle, player.normalspeed/2)
-					P_SetObjectMomZ(mo.rock, 5*FRACUNIT, true)
-				else
-					P_InstaThrust(mo, mo.angle, player.normalspeed/2)
-					P_SetObjectMomZ(mo, 5*FRACUNIT, true)
-				end
-			end
-		end
-		
-		if mo.rock and mo.rock.valid
-		and not P_IsObjectOnGround(mo.rock)
+		if not P_IsObjectOnGround(mo.rock)
 		and ((leveltime%3) == 0)
-		and player.powers[pw_sneakers] then
+		and p.powers[pw_sneakers] then -- TODO: custom "dashing" variable
 			P_SpawnGhostMobj(mo)
 		end
 	end
