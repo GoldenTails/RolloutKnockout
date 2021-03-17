@@ -191,7 +191,7 @@ rawset(_G, "RK_SearchForPlayersInRadius", function(mo, dist, avar)
 			end
 		end
 		
-		if closestmo
+		if closestmo then
 			RK_SpawnArrow(mo, closestmo, dist)
 		end
 	end
@@ -284,7 +284,7 @@ addHook("JumpSpecial", function(p)
 				if not p.currentweapon -- No weapon selected
 				and (p.weapondelay <= 2) then -- Not on cooldown
 					-- Let's give your character a dashing ability
-					if not p.powers[pw_flashing] and not p.powers[pw_sneakers] then -- Just starting from a dash...
+					if not p.powers[pw_sneakers] then -- Just starting from a dash...
 						p.powers[pw_flashing] = TICRATE/3
 						S_StopSound(mo)
 						--S_StartSound(mo, sfx_mswarp) -- Zoom!
