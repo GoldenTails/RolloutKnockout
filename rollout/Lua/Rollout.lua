@@ -277,8 +277,13 @@ end)
 addHook("JumpSpecial", function(p)
 	if G_IsRolloutGametype() then
 		if p.mo and p.mo.valid
+		and p.mo.rock and p.mo.rock.valid
 			local mo = p.mo
-			if P_IsObjectOnGround(mo.rock) and not (p.pflags & PF_JUMPDOWN) then -- Pressing the attack button
+			if (P_IsObjectOnGround(mo.rock) -- On ground
+			or (mo.rock.eflags & MFE_TOUCHWATER) -- Or touching Water
+			or (mo.rock.eflags & MFE_GOOWATER) -- Or touching goo
+			or (mo.rock.eflags & MFE_TOUCHLAVA)) -- Or touching Lava
+			and not (p.pflags & PF_JUMPDOWN) then -- Not holding the jump button
 				p.pflags = $ | PF_JUMPDOWN
 				
 				if not p.currentweapon -- No weapon selected
@@ -294,11 +299,9 @@ addHook("JumpSpecial", function(p)
 					p.powers[pw_sneakers] = (3*TICRATE)/4
 					p.powers[pw_nocontrol] = TICRATE/2
 					p.weapondelay = (3*TICRATE)
-					if mo.rock and mo.rock.valid then
-						P_InstaThrust(mo.rock, mo.angle, p.normalspeed/2)
-						P_SetObjectMomZ(mo.rock, 5*FRACUNIT, true)
-					end
-
+					P_InstaThrust(mo.rock, mo.angle, p.normalspeed/2)
+					P_SetObjectMomZ(mo.rock, 5*FRACUNIT, true)
+					
 				elseif (p.currentweapon == WEP_AUTO) -- Automatic Ring
 				and (p.ringweapons & RW_AUTO) -- Weapon ring able to be fired
 				and (p.powers[pw_automaticring] > 0) -- Player has Auto rings to spare?
