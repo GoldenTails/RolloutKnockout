@@ -3,6 +3,8 @@ freeslot(
 --"TOL_ROLLOUTRACE"
 )
 
+rawset(_G, "RK_WepRings", 0) -- Change to 1 to experiment with EXPERIMENTAL weapon ring abilities
+
 freeslot("sfx_pointu")
 sfxinfo[sfx_pointu].caption = "Point up!"
 
@@ -217,14 +219,18 @@ addHook("PlayerSpawn", function(player)
 		player.powers[pw_nocontrol] = TICRATE/3
 		local rheight = mobjinfo[MT_ROLLOUTROCK].height -- Rock Height
 		P_TeleportMove(player.mo, player.mo.x, player.mo.y, player.mo.z + rheight + 5*FRACUNIT) -- Offset to be above the rock slightly
-
+		player.ingametics = 0
+		
 		player.mo.rock = P_SpawnMobj(player.mo.x, player.mo.y, player.mo.floorz, MT_ROLLOUTROCK) -- Spawn rock on the player's current floorz
-		player.mo.rock.target = player.mo -- Target the player that spawned you. See "MobjThinker"
-		player.mo.rock.colorized = true
+		
+		local rock = player.mo.rock
+		rock.target = player.mo -- Target the player that spawned you. See "MobjThinker"
+		rock.colorized = true
 		if not (mapheaderinfo[gamemap].rockfloat) then
-			player.mo.rock.flags2 = $ | MF2_AMBUSH
+			rock.flags2 = $ | MF2_AMBUSH
 		end
-		player.ingametime = 0
+		rock.rkability = 0
+		rock.rkabilitytics = 0
 	end
 end)
 
@@ -277,7 +283,7 @@ end)
 addHook("JumpSpecial", function(p)
 	if G_IsRolloutGametype() then
 		if p.mo and p.mo.valid
-		and p.mo.rock and p.mo.rock.valid
+		and p.mo.rock and p.mo.rock.valid then
 			local mo = p.mo
 			if (P_IsObjectOnGround(mo.rock) -- On ground
 			or (mo.rock.eflags & MFE_TOUCHWATER) -- Or touching Water
@@ -288,24 +294,23 @@ addHook("JumpSpecial", function(p)
 				
 				if not p.currentweapon -- No weapon selected
 				and (p.weapondelay <= 2) then -- Not on cooldown
-					-- Let's give your character a dashing ability
-					if not p.powers[pw_sneakers] then -- Just starting from a dash...
-						p.powers[pw_flashing] = TICRATE/3
-						S_StopSound(mo)
-						--S_StartSound(mo, sfx_mswarp) -- Zoom!
-						S_StartSound(mo, sfx_s3kb6) -- Spin Launch
-					end
+					S_StopSound(mo)
+					--S_StartSound(mo, sfx_mswarp) -- Zoom!
+					S_StartSound(mo, sfx_s3kb6) -- Spin Launch
 					
-					p.powers[pw_sneakers] = (3*TICRATE)/4
-					p.powers[pw_nocontrol] = TICRATE/2
 					p.weapondelay = (3*TICRATE)
+					p.mo.rock.rkability = WEP_RAIL
+					p.mo.rock.rkabilitytics = (3*TICRATE)/4
+					p.powers[pw_flashing] = TICRATE/3
+					p.powers[pw_nocontrol] = TICRATE/2
 					P_InstaThrust(mo.rock, mo.angle, p.normalspeed/2)
 					P_SetObjectMomZ(mo.rock, 5*FRACUNIT, true)
-					
+
 				elseif (p.currentweapon == WEP_AUTO) -- Automatic Ring
 				and (p.ringweapons & RW_AUTO) -- Weapon ring able to be fired
 				and (p.powers[pw_automaticring] > 0) -- Player has Auto rings to spare?
-				and (p.weapondelay <= 2) then -- Not on cooldown
+				and (p.weapondelay <= 2) -- Not on cooldown
+				and RK_WepRings then
 					-- Code
 					RK_DrainAmmo(p, pw_automaticring) -- Decrease your weapon ring count by one
 					--S_StartSound(mo, sfx_antiri) -- Play a sound...
@@ -316,7 +321,8 @@ addHook("JumpSpecial", function(p)
 				elseif (p.currentweapon == WEP_BOUNCE) -- Automatic Ring
 				and (p.ringweapons & RW_BOUNCE) -- Weapon ring able to be fired
 				and (p.powers[pw_bouncering] > 0) -- Player has Auto rings to spare?
-				and (p.weapondelay <= 2) then -- Not on cooldown
+				and (p.weapondelay <= 2) -- Not on cooldown
+				and RK_WepRings then
 					-- Code
 					RK_DrainAmmo(p, pw_bouncering) -- Decrease your weapon ring count by one
 					--S_StartSound(mo, sfx_antiri) -- Play a sound...
@@ -327,7 +333,8 @@ addHook("JumpSpecial", function(p)
 				elseif (p.currentweapon == WEP_SCATTER) -- Scatter Ring
 				and (p.ringweapons & RW_SCATTER) -- Weapon ring able to be fired
 				and (p.powers[pw_scatterring] > 0) -- Player has Scatter rings to spare?
-				and (p.weapondelay <= 2) then -- Not on cooldown
+				and (p.weapondelay <= 2) -- Not on cooldown
+				and RK_WepRings then
 					-- Code
 					RK_DrainAmmo(p, pw_scatterring) -- Decrease your weapon ring count by one
 					--S_StartSound(mo, sfx_antiri) -- Play a sound...
@@ -338,7 +345,8 @@ addHook("JumpSpecial", function(p)
 				elseif (p.currentweapon == WEP_GRENADE) -- Grenade Ring
 				and (p.ringweapons & RW_GRENADE) -- Weapon ring able to be fired
 				and (p.powers[pw_grenadering] > 0) -- Player has Scatter rings to spare?
-				and (p.weapondelay <= 2) then -- Not on cooldown
+				and (p.weapondelay <= 2) -- Not on cooldown
+				and RK_WepRings then
 					-- Code
 					RK_DrainAmmo(p, pw_grenadering) -- Decrease your weapon ring count by one
 					--S_StartSound(mo, sfx_antiri) -- Play a sound...
@@ -349,7 +357,8 @@ addHook("JumpSpecial", function(p)
 				elseif (p.currentweapon == WEP_EXPLODE) -- Explosion Ring
 				and (p.ringweapons & RW_EXPLODE) -- Weapon ring able to be fired
 				and (p.powers[pw_explosionring] > 0) -- Player has Scatter rings to spare?
-				and (p.weapondelay <= 2) then -- Not on cooldown
+				and (p.weapondelay <= 2) -- Not on cooldown
+				and RK_WepRings then
 					-- Code
 					RK_DrainAmmo(p, pw_explosionring) -- Decrease your weapon ring count by one
 					--S_StartSound(mo, sfx_antiri) -- Play a sound...
@@ -360,18 +369,49 @@ addHook("JumpSpecial", function(p)
 				elseif (p.currentweapon == WEP_RAIL) -- Rail ring
 				and (p.ringweapons & RW_RAIL) -- Weapon ring able to be fired
 				and (p.powers[pw_railring] > 0) -- Player has Rail rings to spare?
-				and (p.weapondelay <= 2) then -- Not on cooldown
+				and (p.weapondelay <= 2) -- Not on cooldown
+				and RK_WepRings then
 					-- Code
-					RK_DrainAmmo(p, pw_railring) -- Decrease your weapon ring count by one
+					--RK_DrainAmmo(p, pw_railring) -- Decrease your weapon ring count by one
 					--S_StartSound(mo, sfx_antiri) -- Play a sound...
 					S_StartSound(mo.target, sfx_kc65)
 					p.weapondelay = 5*TICRATE -- Cooldown
-					CONS_Printf(p, "Ability not implemented yet!")
+					p.mo.rock.rkability = p.currentweapon
+					p.mo.rock.rkabilitytics = (3*TICRATE)/4
+					p.powers[pw_nocontrol] = TICRATE
+					P_SetObjectMomZ(mo.rock, p.jumpfactor, false)
 					
+				elseif (p.weapondelay <= 2) then
+					S_StartSound(mo.target, sfx_kc65)
+					p.weapondelay = 5*TICRATE -- Cooldown
+					CONS_Printf(p, "Ability not implemented yet!")
 				end
-				
 			end
 		end
+		return (p.powers[pw_carry] & CR_ROLLOUT)
+	else
+		return false
+	end
+end)
+
+addHook("AbilitySpecial", function(p)
+	if G_IsRolloutGametype()
+		return true
+	else
+		return false
+	end
+end)
+
+addHook("JumpSpinSpecial", function(p)
+	if G_IsRolloutGametype()
+		return true
+	else
+		return false
+	end
+end)
+
+addHook("SpinSpecial", function(p)
+	if G_IsRolloutGametype()
 		return true
 	else
 		return false
@@ -384,18 +424,12 @@ addHook("PlayerThink", function(p)
 	and (p.mo.rock and p.mo.rock.valid)
 	and p.playerstate ~= PST_DEAD then
 		local mo = p.mo
-		if (p.playerstate == PST_LIVE) then p.ingametime = $ + 1 end
+		if (p.playerstate == PST_LIVE) then p.ingametics = $ + 1 end
 		
 		-- Respawn failsafe
-		if (p.ingametime < 2*TICRATE)
+		if (p.ingametics < 2*TICRATE)
 		and p.mo.rock.bumpcount and (p.mo.rock.bumpcount > 15) then
 			p.playerstate = PST_REBORN
-		end
-		
-		if not P_IsObjectOnGround(mo.rock)
-		and ((leveltime%3) == 0)
-		and p.powers[pw_sneakers] then -- TODO: custom "dashing" variable
-			P_SpawnGhostMobj(mo)
 		end
 	end
 end)
@@ -404,6 +438,13 @@ addHook("MobjThinker", function(mo)
     if mo and mo.valid
     and G_IsRolloutGametype() then
 		if mo.target and mo.target.valid then -- Valid target
+			-- Did your target player suddenly die?
+			if mo.target.player and mo.target.player.valid
+			and (mo.target.player.playerstate == PST_DEAD) then
+				P_RemoveMobj(mo) -- So should you!
+				return
+			end
+			
 			-- Last bumper for score calculation
 			if mo.lastbumper and mo.lastbumper.valid -- Validity check
 			and (mo.lastbumpertics > 0) then
@@ -425,13 +466,6 @@ addHook("MobjThinker", function(mo)
 				end
 			end
 
-			-- Did your target player suddenly die?
-			if mo.target.player and mo.target.player.valid
-			and (mo.target.player.playerstate == PST_DEAD) then
-				P_RemoveMobj(mo) -- So should you!
-				return
-			end
-
 			-- Your ball is colored!
 			if mo.colorized then
 				-- If you have a lastbumper, set your color to your lastbumper for a bit!
@@ -451,6 +485,56 @@ addHook("MobjThinker", function(mo)
                 local slope = mo.standingslope -- Simplify ourselves
                 P_InstaThrust(mo, slope.xydirection, FRACUNIT*2) -- Push the rock down the slope
             end
+			
+			-- Rock Ability stuff
+			if mo.rkabilitytics and (mo.rkabilitytics > 0) then
+				mo.rkabilitytics = $ - 1 -- Decrease each tic
+				if RK_WepRings -- Weapon rings are enabled
+				and mo.rkability then
+					if (mo.rkability == WEP_RAIL) then
+						mo.extravalue1 = $ or 0
+						mo.extravalue2 = $ or 0
+						mo.extravalue1 = $ + ANGLE_11hh
+						mo.extravalue2 = mo.extravalue1 + ANGLE_180
+						
+						--if ((leveltime%2) == 0)
+							local trail = P_SpawnMobj(mo.x, mo.y, mo.z, MT_THOK)
+							trail.color = SKINCOLOR_WHITE
+							trail.tics = 2*TICRATE
+							trail.scale = 2*FRACUNIT
+							trail.destscale = FRACUNIT/16
+							trail.scalespeed = trail.scale/TICRATE
+						--end
+						
+						local orb1 = P_SpawnMobj(mo.x, mo.y, mo.z, MT_THOK)
+						orb1.color = mo.color or SKINCOLOR_RED
+						orb1.angle = mo.extravalue1
+						P_TeleportMove(orb1, 
+										mo.x + FixedMul(cos(orb1.angle), 3*mo.radius/2), 
+										mo.y + FixedMul(sin(orb1.angle), 3*mo.radius/2), 
+										mo.z + mo.height/2)
+						orb1.fuse = TICRATE/3
+						orb1.destscale = FRACUNIT/16
+						orb1.scalespeed = (FRACUNIT/5)
+						
+						local orb2 = P_SpawnMobj(mo.x, mo.y, mo.z, MT_THOK)
+						orb2.color = mo.color or SKINCOLOR_RED
+						orb2.angle = mo.extravalue2
+						P_TeleportMove(orb2, 
+										mo.x + FixedMul(cos(orb2.angle), 3*mo.radius/2), 
+										mo.y + FixedMul(sin(orb2.angle), 3*mo.radius/2), 
+										mo.z + mo.height/2)
+						orb2.fuse = orb1.fuse
+						orb2.destscale = orb1.destscale
+						orb2.scalespeed = orb1.scalespeed
+					end
+				else
+					if not P_IsObjectOnGround(mo.rock) and ((leveltime%3) == 0) then P_SpawnGhostMobj(mo) end -- Default dashing.
+				end
+			else
+				mo.rkability = 0
+				mo.rkabilitytics = 0
+			end
         else -- Oops, your target dissappeared?
 			P_RemoveMobj(mo) -- So should you!
 			return
