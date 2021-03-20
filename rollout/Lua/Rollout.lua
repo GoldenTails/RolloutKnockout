@@ -529,7 +529,7 @@ addHook("MobjThinker", function(mo)
 						orb2.scalespeed = orb1.scalespeed
 					end
 				else
-					if not P_IsObjectOnGround(mo.rock) and ((leveltime%3) == 0) then P_SpawnGhostMobj(mo) end -- Default dashing.
+					if not P_IsObjectOnGround(mo) and ((leveltime%3) == 0) then P_SpawnGhostMobj(mo) end -- Default dashing.
 				end
 			else
 				mo.rkability = 0
