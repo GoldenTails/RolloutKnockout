@@ -31,6 +31,7 @@ addHook("PlayerSpawn", function(player)
 		if not (mapheaderinfo[gamemap].rockfloat) then
 			rock.flags2 = $ | MF2_AMBUSH
 		end
+		rock.bumpcount = 0
 		rock.rkability = 0
 		rock.rkabilitytics = 0
 	end

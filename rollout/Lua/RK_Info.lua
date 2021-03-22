@@ -2,7 +2,6 @@
 -- RK_Info.Lua
 -- Resource file for Mobj objects, states and sounds
 -- 
--- 
 -- Flame
 --
 -- Date: 3-21-21

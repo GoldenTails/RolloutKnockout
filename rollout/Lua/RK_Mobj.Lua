@@ -148,27 +148,6 @@ addHook("MobjThinker", function(mo)
 				return
 			end
 			
-			-- Last bumper for score calculation
-			if mo.lastbumper and mo.lastbumper.valid -- Validity check
-			and (mo.lastbumpertics > 0) then
-				mo.lastbumpertics = $ - 1
-				if (mo.lastbumpertics == 1) then -- Last tic
-					mo.lastbumper = nil -- Nil out your last bumper
-				end
-			else -- mo.lastbumper not valid
-				mo.lastbumpertics = 0
-				mo.lastbumper = nil -- Nil out your last bumper
-			end
-
-			-- Bump count for Player Respawning
-			mo.bumpcount = $ or 0
-			if mo.bumpcount and (mo.bumpcounttics > 0) then
-				mo.bumpcounttics = $ - 1
-				if (mo.bumpcounttics == 1) then -- Last tic
-					mo.bumpcount = 0 -- Reset the bump count
-				end
-			end
-
 			-- Your ball is colored!
 			if mo.colorized then
 				-- If you have a lastbumper, set your color to your lastbumper for a bit!
@@ -181,13 +160,6 @@ addHook("MobjThinker", function(mo)
 					mo.color = mo.target.color
 				end
 			end
-			
-			-- On a slope
-            if mo.standingslope
-			and (mapheaderinfo[gamemap].slopefall) then
-                local slope = mo.standingslope -- Simplify ourselves
-                P_InstaThrust(mo, slope.xydirection, FRACUNIT*2) -- Push the rock down the slope
-            end
 			
 			-- Rock Ability stuff
 			if mo.rkabilitytics and (mo.rkabilitytics > 0) then
@@ -243,9 +215,30 @@ addHook("MobjThinker", function(mo)
 			return
         end
 		
+		-- Last bumper for score calculation
+		if mo.lastbumper and mo.lastbumper.valid -- Validity check
+		and (mo.lastbumpertics > 0) then
+			mo.lastbumpertics = $ - 1
+			if (mo.lastbumpertics == 1) then -- Last tic
+				mo.lastbumper = nil -- Nil out your last bumper
+			end
+		else -- mo.lastbumper not valid
+			mo.lastbumpertics = 0
+			mo.lastbumper = nil -- Nil out your last bumper
+		end
+
+		-- Bump count for Player Respawning
+		mo.bumpcount = $ or 0
+		if mo.bumpcount and (mo.bumpcounttics > 0) then
+			mo.bumpcounttics = $ - 1
+			if (mo.bumpcounttics == 1) then -- Last tic
+				mo.bumpcount = 0 -- Reset the bump count
+			end
+		end
+		
 		if mo.fxtimer and (mo.fxtimer > 0) then
 			mo.fxtimer = $ - 1
-			RK.mobj.spawnAura(mo, mo.color)
+			RK.mobj.spawnAura(mo, mo.target.color)
 		end
 		
 		RK.mobj.SearchForPlayersInRadius(mo, 512*FRACUNIT, RK.cons.Arrows.value)
@@ -329,27 +322,28 @@ addHook("MobjRemoved", function(mobj)
 			P_SetMobjStateNF(poof, S_FBOMB_EXPL1)
 			S_StartSound(poof, sfx_s3k4e)
 			
-			-- Your host is already dead". Eg. Your host died before you.
+			-- Your host is already dead. Eg. Your host died before you.
 			if (mobj.target.player.playerstate == PST_DEAD) then 
 				if mobj.lastbumper and mobj.lastbumper.valid
-				and mobj.lastbumper.player 
-				and mobj.lastbumper.player.valid then -- Validity check
+				and mobj.lastbumper.player and mobj.lastbumper.player.valid then -- Validity check
 					-- There would be occurances where your host dies before the rock disappears, and no points for score are awarded
 					-- This 'hopefully' fixes that.
 					--print("Player died before the Rock despawned!")
 					P_AddPlayerScore(mobj.lastbumper.player, 100)
-					mobj.lastbumper.rock.fxtimer = 3*TICRATE/2
-					S_StartSound(mobj.lastbumper.rock, sfx_pointu)
-					
-					local dummy = P_SpawnMobj(mobj.lastbumper.rock.x, 
-												mobj.lastbumper.rock.y, 
-												mobj.lastbumper.rock.height/2 + mobj.lastbumper.rock.z, 
-												MT_DUMMY)
-					P_SetMobjStateNF(dummy, S_NIGHTSCORE100)
-					P_SetObjectMomZ(dummy, FRACUNIT, false)
-					dummy.fuse = 3*TICRATE
-					dummy.scalespeed = FRACUNIT/25
-					dummy.destscale = 2*FRACUNIT
+					if mobj.lastbumper.rock and mobj.lastbumper.rock.valid then
+						mobj.lastbumper.rock.fxtimer = 3*TICRATE/2
+						S_StartSound(mobj.lastbumper.rock, sfx_pointu)
+						
+						local dummy = P_SpawnMobj(mobj.lastbumper.rock.x, 
+													mobj.lastbumper.rock.y, 
+													mobj.lastbumper.rock.height/2 + mobj.lastbumper.rock.z, 
+													MT_DUMMY)
+						P_SetMobjStateNF(dummy, S_NIGHTSCORE100)
+						P_SetObjectMomZ(dummy, FRACUNIT, false)
+						dummy.fuse = 3*TICRATE
+						dummy.scalespeed = FRACUNIT/25
+						dummy.destscale = 2*FRACUNIT
+					end
 				end
 			else -- You died before your host.
 				if mobj.lastbumper and mobj.lastbumper.valid

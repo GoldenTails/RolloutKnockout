@@ -2,7 +2,6 @@
 -- RK_Globals.Lua
 -- Resource file for tables and functionsto be used throughout the Lua code.
 -- 
--- 
 -- Flame
 --
 -- Date: 3-21-21
