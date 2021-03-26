@@ -8,11 +8,14 @@
 -- Date: 3-21-21
 --
 
+RK.gt = {}
+
 freeslot(
 "TOL_ROLLOUT"--,
 --"TOL_ROLLOUTRACE"
 )
-G_AddGametype({
+
+RK.gt.rk = {
 	name = "Rollout Knockout",
 	identifier = "ROLLOUT",
 	typeoflevel = TOL_ROLLOUT,
@@ -22,7 +25,9 @@ G_AddGametype({
 	defaulttimelimit = 5,
 	headercolor = 148,
 	description = "You and your opponents are all on rocks, whaddya do? Knock them off the area, of course!"
-})
+}
+
+G_AddGametype(RK.gt.rk)
 
 /*G_AddGametype({
     name = "Rollout Race",

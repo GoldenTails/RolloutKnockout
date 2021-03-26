@@ -17,7 +17,7 @@ RK.mobj.spawnAura = function(mo, color)	-- spawn a aura around mo
 	color = $ or SKINCOLOR_TEAL
 	local baseangle = P_RandomRange(1, 360)*ANG1
 	local dist = 30
-	for i = 0, 12
+	for i = 0, 12 do
 		local angle = baseangle + i*6*ANG1
 		local x, y = mo.x + dist*cos(angle), mo.y + dist*sin(angle)
 
@@ -33,7 +33,7 @@ RK.mobj.spawnAura = function(mo, color)	-- spawn a aura around mo
 	end
 
 	local zoffs = mo.eflags & MFE_VERTICALFLIP and -65*mo.scale or 0
-	for i = 1, 8
+	for i = 1, 8 do
 		local wf = 32
 		local hf = P_RandomRange(65, 1)*mo.scale*P_MobjFlip(mo)
 		local x, y, z = mo.x + P_RandomRange(-wf, wf)*mo.scale, mo.y + P_RandomRange(-wf, wf)*mo.scale, mo.z + zoffs + hf
@@ -49,7 +49,7 @@ RK.mobj.spawnAura = function(mo, color)	-- spawn a aura around mo
 	end
 end
 
-RK.mobj.SpawnArrow = function(mo, target, dist)
+RK.mobj.spawnArrow = function(mo, target, dist)
 	-- Need both a source 'mo' and a target 'mo'
 	if not mo or not mo.valid then return end
 	if not target or not target.valid then return end
@@ -67,6 +67,27 @@ RK.mobj.SpawnArrow = function(mo, target, dist)
 
 	-- Some more fancy maths. Grow/shrink according to your target's distance
 	arw.scale = FixedDiv(FixedMul(FRACUNIT, dist), R_PointToDist2(mo.x, mo.y, target.x, target.y))/2
+end
+
+RK.mobj.spawnSmoke = function(mo, freq)
+	if not mo or not mo.valid then return end
+	freq = $ or 3
+
+	if not (leveltime%freq) then
+		local r = mo.radius>>FRACBITS
+		local xpld = P_SpawnMobj(
+				mo.x + (P_RandomRange(r, -r)<<FRACBITS),
+				mo.y + (P_RandomRange(r, -r)<<FRACBITS),
+				mo.z + (P_RandomKey(mo.height>>FRACBITS)<<FRACBITS),
+				MT_DUMMY)
+		xpld.state = S_XPLD3
+		xpld.angle = R_PointToAngle2(mo.x, mo.y, xpld.x, xpld.y)
+		P_InstaThrust(xpld, xpld.angle, FRACUNIT)
+		P_SetObjectMomZ(xpld, FRACUNIT, false)
+		xpld.fuse = 2*TICRATE
+		xpld.scalespeed = FRACUNIT/25
+		xpld.destscale = 2*FRACUNIT
+	end
 end
 
 -- Search for other player objects around 'mo' and return the count.
@@ -98,7 +119,7 @@ RK.mobj.SearchForPlayersInRadius = function(mo, dist, avar)
 	local closestmo = nil
 	local closestdist = dist -- Maximum possible distance to search.
 	if (avar == 2) then -- Spawn arrows for all players around you
-		for p in players.iterate
+		for p in players.iterate do
 			if p.spectator then continue end -- We're a spectator. Skip.
 			if (p.playerstate ~= PST_LIVE) continue end -- Skip anyone not alive
 			if not p.mo then continue end -- Not a mo object. Skip.
@@ -110,10 +131,10 @@ RK.mobj.SearchForPlayersInRadius = function(mo, dist, avar)
 				continue -- TOO CLOSE!!
 			end
 			
-			RK.mobj.SpawnArrow(mo, p.mo, dist)
+			RK.mobj.spawnArrow(mo, p.mo, dist)
 		end
 	elseif (avar == 1) then -- Spawn arrows for the closest player seen
-		for p in players.iterate
+		for p in players.iterate do
 			if p.spectator then continue end -- We're a spectator. Skip.
 			if (p.playerstate ~= PST_LIVE) continue end -- Skip anyone not alive
 			if not p.mo then continue end -- Not a mo object. Skip.
@@ -132,7 +153,7 @@ RK.mobj.SearchForPlayersInRadius = function(mo, dist, avar)
 		end
 		
 		if closestmo then
-			RK.mobj.SpawnArrow(mo, closestmo, dist)
+			RK.mobj.spawnArrow(mo, closestmo, dist)
 		end
 	end
 end
@@ -140,6 +161,8 @@ end
 addHook("MobjThinker", function(mo)
     if mo and mo.valid
     and G_IsRolloutGametype() then
+		mo.percent = $ or 0
+		
 		if mo.target and mo.target.valid then -- Valid target
 			-- Did your target player suddenly die?
 			if mo.target.player and mo.target.player.valid
@@ -161,7 +184,7 @@ addHook("MobjThinker", function(mo)
 				end
 			end
 			
-			-- Rock Ability stuff
+			/*-- Rock Ability stuff
 			if mo.rkabilitytics and (mo.rkabilitytics > 0) then
 				mo.rkabilitytics = $ - 1 -- Decrease each tic
 				if RK.WepRings -- Weapon rings are enabled
@@ -209,7 +232,7 @@ addHook("MobjThinker", function(mo)
 			else
 				mo.rkability = 0
 				mo.rkabilitytics = 0
-			end
+			end*/
         else -- Oops, your target dissappeared?
 			P_RemoveMobj(mo) -- So should you!
 			return
@@ -241,17 +264,31 @@ addHook("MobjThinker", function(mo)
 			RK.mobj.spawnAura(mo, mo.target.color)
 		end
 		
+		-- Smoke
+		if mo.percent and (mo.percent >= 75) then
+			local threshold = (5 - (mo.percent/50))
+			if (threshold < 1) then threshold = 1 end
+			RK.mobj.spawnSmoke(mo, 1)
+		end
+		
 		RK.mobj.SearchForPlayersInRadius(mo, 512*FRACUNIT, RK.cons.Arrows.value)
     end
 end, MT_ROLLOUTROCK)
 
 -- Score object
 addHook("MobjThinker", function(mo)
-    if mo and mo.valid
-    and G_IsRolloutGametype() 
-	and (mo.state == S_NIGHTSCORE100) then
-		mo.color = (leveltime%69) -- NICE
-		if (mo.fuse < TICRATE) then mo.flags2 = $ ^^ MF2_DONTDRAW end
+	if mo and mo.valid
+	and G_IsRolloutGametype() then
+		if (mo.state == S_NIGHTSCORE100) then
+			mo.color = (leveltime%69) -- NICE
+			if (mo.fuse < TICRATE) then mo.flags2 = $ ^^ MF2_DONTDRAW end
+		elseif (mo.state >= S_XPLD1) and (mo.state <= S_XPLD6) then
+			mo.threshold = $ or 1
+
+			mo.frame = $|(FF_TRANS20 * mo.threshold)
+
+			if not (leveltime%2) and (mo.threshold < 3) then mo.threshold = $ + 1 end	
+		end
 	end
 end, MT_DUMMY)
 
@@ -271,6 +308,10 @@ addHook("MobjCollide", function(thing, tmthing)
 	end
 end, MT_ROLLOUTROCK)
 
+RK.mobj.calcKnockback = function(p, d, w, b, r)
+	return ((p/10) + ((p*d)/20))*FRACUNIT/2
+end
+
 -- Moving rock v rock
 addHook("MobjMoveCollide", function(tmthing, thing)
 	if tmthing and tmthing.valid
@@ -281,20 +322,21 @@ addHook("MobjMoveCollide", function(tmthing, thing)
 		end
 
 		if (tmthing.type == MT_ROLLOUTROCK) and (thing.type == MT_ROLLOUTROCK) then
-			local intensity = tmthing.momx + tmthing.momy
-			P_StartQuake(intensity, 5)
-			
+			local impact = { intensity = abs(tmthing.momx) + abs(tmthing.momy),
+							angle = R_PointToAngle2(0,0,tmthing.momx,tmthing.momy),
+							mobj = P_SpawnMobj((tmthing.x + thing.x)/2,
+										(tmthing.y + thing.y)/2,
+										((tmthing.z + tmthing.height/2) + (thing.z + thing.height/2))/2,
+										MT_DUMMY)
+							}
+			P_StartQuake(impact.intensity, 5)
+			impact.mobj.state = S_IMPACT1
+						
 			if tmthing.target and tmthing.target.valid then
 				-- Collision! for points!
 				thing.lastbumper = tmthing.target
 				thing.lastbumpertics = 10*TICRATE -- 10 second cooldown
 			end
-
-			local impact = P_SpawnMobj((tmthing.x + thing.x)/2,
-										(tmthing.y + thing.y)/2,
-										((tmthing.z + tmthing.height/2) + (thing.z + thing.height/2))/2,
-										MT_DUMMY)
-			impact.state = S_IMPACT1
 
 			-- This following bit may seem backwards, but it's not
 			if (tmthing.eflags & MFE_VERTICALFLIP) then
@@ -303,10 +345,20 @@ addHook("MobjMoveCollide", function(tmthing, thing)
 				FreeSetZ(tmthing, thing.z)
 			end
 			
-			-- If I need to play around with the collision intensity... this works...
-			--thing.momx = 2*tmthing.momx
-			--thing.momy = 2*tmthing.momy
-			--return true
+			thing.percent = $ + impact.intensity/FRACUNIT
+
+			if (thing.percent > 30) -- Below 30 Percent, process normal knockback behavior.
+			and (impact.intensity > 10) then -- Not light taps
+				impact.knockback = RK.mobj.calcKnockback(thing.percent, impact.intensity/FRACUNIT)
+				P_Thrust(thing, impact.angle, impact.knockback)
+				S_StartSound(tmthing, sfx_s3k49) -- [Impact]
+				--S_StartSound(tmthing, sfx_s3k5d) -- [Heavy Hit]
+				tmthing.momx = $/16
+				tmthing.momy = $/16
+				return true
+			else
+				return false
+			end
 		end
 	end
 end, MT_ROLLOUTROCK) -- Our tmthing

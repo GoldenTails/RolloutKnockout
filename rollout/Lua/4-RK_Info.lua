@@ -7,6 +7,8 @@
 -- Date: 3-21-21
 --
 
+mobjinfo[MT_ROLLOUTROCK].speed = 50*FRACUNIT
+
 -- Lat'
 freeslot("MT_DUMMY")
 mobjinfo[MT_DUMMY] = {
@@ -53,3 +55,4 @@ states[S_RKAW1] = {SPR_RKAW, A|FF_FULLBRIGHT|FF_PAPERSPRITE, 2, nil, 0, 0, S_NUL
 -- Sounds
 freeslot("sfx_pointu")
 sfxinfo[sfx_pointu].caption = "Point up!"
+ 

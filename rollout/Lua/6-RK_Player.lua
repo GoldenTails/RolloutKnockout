@@ -152,7 +152,7 @@ addHook("JumpSpecial", function(p)
 end)
 
 addHook("AbilitySpecial", function(p)
-	if G_IsRolloutGametype()
+	if G_IsRolloutGametype() then
 		return true
 	else
 		return false
@@ -160,7 +160,7 @@ addHook("AbilitySpecial", function(p)
 end)
 
 addHook("JumpSpinSpecial", function(p)
-	if G_IsRolloutGametype()
+	if G_IsRolloutGametype() then
 		return true
 	else
 		return false
@@ -168,7 +168,7 @@ addHook("JumpSpinSpecial", function(p)
 end)
 
 addHook("SpinSpecial", function(p)
-	if G_IsRolloutGametype()
+	if G_IsRolloutGametype() then
 		return true
 	else
 		return false
