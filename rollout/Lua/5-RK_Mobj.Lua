@@ -75,18 +75,18 @@ RK.mobj.spawnSmoke = function(mo, freq)
 
 	if not (leveltime%freq) then
 		local r = mo.radius>>FRACBITS
-		local xpld = P_SpawnMobj(
+		local smoke = P_SpawnMobj(
 				mo.x + (P_RandomRange(r, -r)<<FRACBITS),
 				mo.y + (P_RandomRange(r, -r)<<FRACBITS),
 				mo.z + (P_RandomKey(mo.height>>FRACBITS)<<FRACBITS),
 				MT_DUMMY)
-		xpld.state = S_XPLD3
-		xpld.angle = R_PointToAngle2(mo.x, mo.y, xpld.x, xpld.y)
-		P_InstaThrust(xpld, xpld.angle, FRACUNIT)
-		P_SetObjectMomZ(xpld, FRACUNIT, false)
-		xpld.fuse = 2*TICRATE
-		xpld.scalespeed = FRACUNIT/25
-		xpld.destscale = 2*FRACUNIT
+		smoke.state = S_TNTDUST_5
+		smoke.angle = R_PointToAngle2(mo.x, mo.y, smoke.x, smoke.y)
+		P_InstaThrust(smoke, smoke.angle, FRACUNIT/2)
+		P_SetObjectMomZ(smoke, FRACUNIT, false)
+		smoke.scale = FRACUNIT/2
+		smoke.scalespeed = FRACUNIT/(TICRATE/2)
+		smoke.destscale = FRACUNIT
 	end
 end
 
@@ -184,10 +184,10 @@ addHook("MobjThinker", function(mo)
 				end
 			end
 			
-			/*-- Rock Ability stuff
+			-- Rock Ability stuff
 			if mo.rkabilitytics and (mo.rkabilitytics > 0) then
 				mo.rkabilitytics = $ - 1 -- Decrease each tic
-				if RK.WepRings -- Weapon rings are enabled
+				/*if RK.WepRings -- Weapon rings are enabled
 				and mo.rkability then
 					if (mo.rkability == WEP_RAIL) then
 						mo.extravalue1 = $ or 0
@@ -226,13 +226,13 @@ addHook("MobjThinker", function(mo)
 						orb2.destscale = orb1.destscale
 						orb2.scalespeed = orb1.scalespeed
 					end
-				else
+				else*/
 					if not P_IsObjectOnGround(mo) and ((leveltime%3) == 0) then P_SpawnGhostMobj(mo) end -- Default dashing.
-				end
+				--end
 			else
 				mo.rkability = 0
 				mo.rkabilitytics = 0
-			end*/
+			end
         else -- Oops, your target dissappeared?
 			P_RemoveMobj(mo) -- So should you!
 			return
@@ -266,9 +266,9 @@ addHook("MobjThinker", function(mo)
 		
 		-- Smoke
 		if mo.percent and (mo.percent >= 75) then
-			local threshold = (5 - (mo.percent/50))
+			local threshold = (6 - (mo.percent/50))
 			if (threshold < 1) then threshold = 1 end
-			RK.mobj.spawnSmoke(mo, 1)
+			RK.mobj.spawnSmoke(mo, threshold)
 		end
 		
 		RK.mobj.SearchForPlayersInRadius(mo, 512*FRACUNIT, RK.cons.Arrows.value)
@@ -282,12 +282,12 @@ addHook("MobjThinker", function(mo)
 		if (mo.state == S_NIGHTSCORE100) then
 			mo.color = (leveltime%69) -- NICE
 			if (mo.fuse < TICRATE) then mo.flags2 = $ ^^ MF2_DONTDRAW end
-		elseif (mo.state >= S_XPLD1) and (mo.state <= S_XPLD6) then
+		/*elseif (mo.state >= S_TNTDUST_1) and (mo.state <= S_TNTDUST_8) then
 			mo.threshold = $ or 1
 
 			mo.frame = $|(FF_TRANS20 * mo.threshold)
 
-			if not (leveltime%2) and (mo.threshold < 3) then mo.threshold = $ + 1 end	
+			if not (leveltime%2) and (mo.threshold < 3) then mo.threshold = $ + 1 end*/
 		end
 	end
 end, MT_DUMMY)
@@ -322,16 +322,16 @@ addHook("MobjMoveCollide", function(tmthing, thing)
 		end
 
 		if (tmthing.type == MT_ROLLOUTROCK) and (thing.type == MT_ROLLOUTROCK) then
-			local impact = { intensity = abs(tmthing.momx) + abs(tmthing.momy),
+			local impact = { intensity = FixedHypot(abs(tmthing.momx), abs(tmthing.momy)),
 							angle = R_PointToAngle2(0,0,tmthing.momx,tmthing.momy),
 							mobj = P_SpawnMobj((tmthing.x + thing.x)/2,
-										(tmthing.y + thing.y)/2,
+										(tmthing.y + thing.y)/2, 
 										((tmthing.z + tmthing.height/2) + (thing.z + thing.height/2))/2,
 										MT_DUMMY)
 							}
 			P_StartQuake(impact.intensity, 5)
 			impact.mobj.state = S_IMPACT1
-						
+
 			if tmthing.target and tmthing.target.valid then
 				-- Collision! for points!
 				thing.lastbumper = tmthing.target
@@ -356,8 +356,6 @@ addHook("MobjMoveCollide", function(tmthing, thing)
 				tmthing.momx = $/16
 				tmthing.momy = $/16
 				return true
-			else
-				return false
 			end
 		end
 	end
