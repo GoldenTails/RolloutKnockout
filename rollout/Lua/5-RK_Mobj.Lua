@@ -76,8 +76,8 @@ RK.mobj.spawnSmoke = function(mo, freq)
 	if not (leveltime%freq) then
 		local r = mo.radius>>FRACBITS
 		local smoke = P_SpawnMobj(
-				mo.x + (P_RandomRange(r, -r)<<FRACBITS),
-				mo.y + (P_RandomRange(r, -r)<<FRACBITS),
+				mo.x + (P_RandomRange(-r, r)<<FRACBITS),
+				mo.y + (P_RandomRange(-r, r)<<FRACBITS),
 				mo.z + (P_RandomKey(mo.height>>FRACBITS)<<FRACBITS),
 				MT_DUMMY)
 		smoke.state = S_TNTDUST_5
@@ -245,6 +245,27 @@ addHook("MobjThinker", function(mo)
 			if (mo.lastbumpertics == 1) then -- Last tic
 				mo.lastbumper = nil -- Nil out your last bumper
 			end
+			
+			-- Impact recoil. Spawn a dust trail.
+			if not (leveltime%4) and (mo.lastbumpertics > 9*TICRATE)
+			and (FixedHypot(mo.momx, mo.momy) > (20*FRACUNIT)) then
+				local trail = P_SpawnMobj(mo.x,
+										mo.y,
+										mo.z + mo.height/2, 
+										MT_DUMMY)
+				trail.state = S_TNTDUST_2
+				trail.colorized = true
+				trail.color = mo.lastbumper.color
+				trail.angle = R_PointToAngle2(trail.x, trail.y, mo.x + mo.momx, mo.y + mo.momy) -- Always point to your target
+				trail.rollangle = P_RandomKey(36)*ANG10
+				trail.destscale = 2*FRACUNIT
+				trail.scalespeed = FRACUNIT/(TICRATE/2)
+				
+				trail.flags = $|MF_NOGRAVITY
+				if (mo.eflags & MFE_VERTICALFLIP) then trail.flags = $|MFE_VERTICALFLIP end
+				P_InstaThrust(trail, P_RandomKey(36)*ANG10, FRACUNIT)
+				P_SetObjectMomZ(trail, FRACUNIT, false)
+			end
 		else -- mo.lastbumper not valid
 			mo.lastbumpertics = 0
 			mo.lastbumper = nil -- Nil out your last bumper
@@ -282,12 +303,6 @@ addHook("MobjThinker", function(mo)
 		if (mo.state == S_NIGHTSCORE100) then
 			mo.color = (leveltime%69) -- NICE
 			if (mo.fuse < TICRATE) then mo.flags2 = $ ^^ MF2_DONTDRAW end
-		/*elseif (mo.state >= S_TNTDUST_1) and (mo.state <= S_TNTDUST_8) then
-			mo.threshold = $ or 1
-
-			mo.frame = $|(FF_TRANS20 * mo.threshold)
-
-			if not (leveltime%2) and (mo.threshold < 3) then mo.threshold = $ + 1 end*/
 		end
 	end
 end, MT_DUMMY)
@@ -353,8 +368,8 @@ addHook("MobjMoveCollide", function(tmthing, thing)
 				P_Thrust(thing, impact.angle, impact.knockback)
 				S_StartSound(tmthing, sfx_s3k49) -- [Impact]
 				--S_StartSound(tmthing, sfx_s3k5d) -- [Heavy Hit]
-				tmthing.momx = $/16
-				tmthing.momy = $/16
+				tmthing.momx = 0
+				tmthing.momy = 0
 				return true
 			end
 		end
