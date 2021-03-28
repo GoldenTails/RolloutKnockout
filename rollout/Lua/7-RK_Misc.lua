@@ -36,7 +36,7 @@ rawset(_G, "spairs", function(t, order)
     end
 end)
 
-RK.hud.game = function()
+RK.hud.toggle = function()
 	if G_IsRolloutGametype() then
 		hud.disable("rings")
 		hud.disable("lives")
@@ -61,7 +61,51 @@ RK.hud.game = function()
 		hud.enable("rankings")
 	end
 end
-hud.add(RK.hud.game, "game")
+
+RK.hud.game = function(v, p)
+	RK.hud.toggle()
+	if not v then return end
+	if not p or not p.valid then return end
+	
+	if G_IsRolloutGametype() then
+		local vsize = { x = (v.width()), y = (v.height()) }
+		local rkhud = { x = hudinfo[HUD_LIVES].x,
+						y = hudinfo[HUD_LIVES].y,
+						full = v.cachePatch("RKLA75"),
+						high = v.cachePatch("RKLH"),
+						med = v.cachePatch("RKLM"),
+						low = v.cachePatch("RKLL")
+						}
+		local vflags = V_SNAPTOLEFT|V_SNAPTOBOTTOM|V_ALLOWLOWERCASE
+		local pname = p.name
+		local pface = v.getSprite2Patch(p.mo.skin, SPR2_SIGN, 0, 0) -- Get this player's icon!
+		local pcolor = v.getColormap(-1, p.skincolor)
+		
+		-- Trim the characters to a Max of 8 characters.
+		if pname and string.len(pname) >= 8
+			pname = string.sub($, 1, 8)
+		end
+
+		v.draw(rkhud.x,
+				rkhud.y - 8 ,
+				rkhud.full,
+				V_SNAPTOLEFT|V_SNAPTOBOTTOM, pcolor)
+		
+		v.drawScaled((rkhud.x+17)*FRACUNIT, 
+					(rkhud.y+15)*FRACUNIT,
+					3*FRACUNIT/4,
+					pface, 
+					V_SNAPTOLEFT|V_SNAPTOBOTTOM, pcolor)
+		
+		if p.mo and p.mo.valid and p.mo.rock and p.mo.rock.valid
+			v.drawString(rkhud.x + 60, rkhud.y - 4, p.mo.rock.percent, vflags, "right")
+		else
+			v.drawString(rkhud.x + 60, rkhud.y - 4, "NaN", vflags, "right")
+		end
+		v.drawString(rkhud.x + 60, rkhud.y - 4, "%", vflags, "left")
+		v.drawString(rkhud.x + 38, rkhud.y + 6, pname, vflags, "small-thin")
+	end
+end
 
 RK.hud.scores = function(v)
 	if not v then return end
@@ -96,7 +140,7 @@ RK.hud.scores = function(v)
 			table.insert(RK.ptable.s, v[1])
 		end
 
-		if (#ptables <= 8) then
+		if (#RK.ptable.s <= 8) then
 			-- Headers
 			v.drawString(offset.x, vsize.y/12, "#", vflags|V_YELLOWMAP)
 			v.drawString((offset.x + 136), vsize.y/12, "Name", vflags|V_YELLOWMAP)
@@ -117,29 +161,30 @@ RK.hud.scores = function(v)
 			v.drawFill(vsize.x/2, vsize.y/8, 4, vsize.y, vflags|SKINCOLOR_WHITE)
 		end
 
-		for i = 1, #ptables do
-			local p = ptables[i] -- We've come full circle now.
+		for i = 1, #RK.ptable.s do
+			local p = RK.ptable.s[i] -- We've come full circle now.
 			local mo = p.mo or p.realmo
 			local pname = p.name
 			local pface = v.getSprite2Patch(mo.skin, SPR2_XTRA, 0, 0) -- Get this player's icon!
-
+			local pcolor = v.getColormap(-1, p.skincolor)
+			
 			-- Trim the characters to a Max of 12 characters.
 			if pname and string.len(pname) >= 12
 				pname = string.sub($, 1, 12)
 			end
 
-			if (#ptables <= 8) then -- Less than 8 players
+			if (#RK.ptable.s <= 8) then -- Less than 8 players
 				v.drawString(offset.x, vsize.y/6 + (i-1)*70, i, vflags) -- Player node number
 				if p.spectator or (p.playerstate == PST_DEAD) then
 					v.drawScaled((offset.x + 64)*FRACUNIT, 
 									(vsize.y/7 + (i-1)*70)*FRACUNIT, 
 									FRACUNIT/2, pface,
-									V_50TRANS|vflags, v.getColormap(-1, p.skincolor)) -- Player Portrait w/ current player color (Transparent)
+									V_50TRANS|vflags, pcolor) -- Player Portrait w/ current player color (Transparent)
 				else
 					v.drawScaled((offset.x + 64)*FRACUNIT, 
 									(vsize.y/7 + (i-1)*70)*FRACUNIT, 
 									FRACUNIT/2, pface,
-									vflags, v.getColormap(-1, p.skincolor)) -- Player Portrait w/ current player color
+									vflags, pcolor) -- Player Portrait w/ current player color
 				end
 				v.drawString(offset.x + 136, vsize.y/6 + (i-1)*70, pname, vflags|V_ALLOWLOWERCASE) -- Player Name
 				if mo.rock and mo.rock.valid then
@@ -156,12 +201,12 @@ RK.hud.scores = function(v)
 						v.drawScaled((offset.xh + 64)*FRACUNIT, 
 										(vsize.y/7 + 8 + (i-1)*70)*FRACUNIT, 
 										FRACUNIT/3, pface,
-										V_50TRANS|vflags, v.getColormap(-1, p.skincolor)) -- Player Portrait w/ current player color (Transparent)
+										V_50TRANS|vflags, pcolor) -- Player Portrait w/ current player color (Transparent)
 					else
 						v.drawScaled((offset.xh + 64)*FRACUNIT, 
 										(vsize.y/7 + 8 + (i-1)*70)*FRACUNIT, 
 										FRACUNIT/3, pface,
-										vflags, v.getColormap(-1, p.skincolor)) -- Player Portrait w/ current player color
+										vflags, pcolor) -- Player Portrait w/ current player color
 					end
 					v.drawString(offset.xh + 136, vsize.y/6 + (i-1)*70, pname, vflags|V_ALLOWLOWERCASE, "thin") -- Player Name
 					if mo.rock and mo.rock.valid then
@@ -176,12 +221,12 @@ RK.hud.scores = function(v)
 						v.drawScaled((offset.xh2 + 64)*FRACUNIT, 
 										(vsize.y/7 + 8 + (i-9)*70)*FRACUNIT, 
 										FRACUNIT/3, pface,
-										V_50TRANS|vflags, v.getColormap(-1, p.skincolor)) -- Player Portrait w/ current player color (Transparent)
+										V_50TRANS|vflags, pcolor) -- Player Portrait w/ current player color (Transparent)
 					else
 						v.drawScaled((offset.xh2 + 64)*FRACUNIT, 
 										(vsize.y/7 + 8 + (i-9)*70)*FRACUNIT, 
 										FRACUNIT/3, pface,
-										vflags, v.getColormap(-1, p.skincolor)) -- Player Portrait w/ current player color
+										vflags, pcolor) -- Player Portrait w/ current player color
 					end
 					v.drawString(offset.xh2 + 136, vsize.y/6 + (i-9)*70, pname, vflags|V_ALLOWLOWERCASE, "thin") -- Player Name
 					if mo.rock and mo.rock.valid then
@@ -199,7 +244,6 @@ RK.hud.scores = function(v)
 		hud.enable("rankings")
 	end
 end
-hud.add(RK.hud.scores, "scores")
 
 -- HurtMsg hook to replace the default "x's tagging hand killed y" Message
 addHook("HurtMsg", function(p, i, s)
@@ -219,3 +263,6 @@ addHook("HurtMsg", function(p, i, s)
 		return false
 	end
 end, MT_PLAYER)
+
+hud.add(RK.hud.game, "game")
+hud.add(RK.hud.scores, "scores")
