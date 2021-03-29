@@ -86,11 +86,13 @@ RK.hud.game = function(v, p)
 			pname = string.sub($, 1, 8)
 		end
 
+		-- Player Hud Graphic
 		v.draw(rkhud.x,
 				rkhud.y - 8 ,
 				rkhud.full,
 				V_SNAPTOLEFT|V_SNAPTOBOTTOM, pcolor)
 		
+		-- Draw the Player Portrait
 		v.drawScaled((rkhud.x+17)*FRACUNIT, 
 					(rkhud.y+15)*FRACUNIT,
 					3*FRACUNIT/4,

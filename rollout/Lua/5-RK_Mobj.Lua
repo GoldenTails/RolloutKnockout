@@ -344,7 +344,7 @@ addHook("MobjMoveCollide", function(tmthing, thing)
 										((tmthing.z + tmthing.height/2) + (thing.z + thing.height/2))/2,
 										MT_DUMMY)
 							}
-			P_StartQuake(impact.intensity, 5)
+			P_StartQuake(abs(tmthing.momx) + abs(tmthing.momy), 5)
 			impact.mobj.state = S_IMPACT1
 
 			if tmthing.target and tmthing.target.valid then
@@ -360,7 +360,9 @@ addHook("MobjMoveCollide", function(tmthing, thing)
 				FreeSetZ(tmthing, thing.z)
 			end
 			
-			thing.percent = $ + impact.intensity/FRACUNIT
+			if (thing.percent ~= nil)
+				thing.percent = $ + impact.intensity/FRACUNIT
+			end
 
 			if (thing.percent > 30) -- Below 30 Percent, process normal knockback behavior.
 			and (impact.intensity > 10) then -- Not light taps
