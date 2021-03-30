@@ -20,6 +20,12 @@ mobjinfo[MT_DUMMY] = {
 	flags = MF_NOGRAVITY|MF_NOCLIPTHING|MF_NOBLOCKMAP|MF_NOCLIPHEIGHT|MF_NOCLIP,
 }
 
+freeslot("SPR_NMBR")
+for i = 1, 11 -- 0 - 9 (10) and Percent
+	freeslot("S_NMBR"..(i-1))
+	states[S_NMBR0+(i-1)] = {SPR_NMBR, (i-1)|FF_FULLBRIGHT|FF_PAPERSPRITE, 2, nil, 0, 0, S_NULL}
+end
+
 for i = 1, 3
 	freeslot("S_AURA"..i)
 end

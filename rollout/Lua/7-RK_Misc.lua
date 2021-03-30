@@ -78,7 +78,8 @@ RK.hud.game = function(v, p)
 						}
 		local vflags = V_SNAPTOLEFT|V_SNAPTOBOTTOM|V_ALLOWLOWERCASE
 		local pname = p.name
-		local pface = v.getSprite2Patch(p.mo.skin, SPR2_SIGN, 0, 0) -- Get this player's icon!
+		local mo = p.mo or p.realmo
+		local pface = v.getSprite2Patch(mo.skin, SPR2_SIGN, 0, 0) -- Get this player's icon!
 		local pcolor = v.getColormap(-1, p.skincolor)
 		
 		-- Trim the characters to a Max of 8 characters.
@@ -99,8 +100,8 @@ RK.hud.game = function(v, p)
 					pface, 
 					V_SNAPTOLEFT|V_SNAPTOBOTTOM, pcolor)
 		
-		if p.mo and p.mo.valid and p.mo.rock and p.mo.rock.valid
-			v.drawString(rkhud.x + 60, rkhud.y - 4, p.mo.rock.percent, vflags, "right")
+		if mo and mo.valid and mo.rock and mo.rock.valid
+			v.drawString(rkhud.x + 60, rkhud.y - 4, mo.rock.percent, vflags, "right")
 		else
 			v.drawString(rkhud.x + 60, rkhud.y - 4, "NaN", vflags, "right")
 		end

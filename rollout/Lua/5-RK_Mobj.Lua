@@ -15,6 +15,7 @@ RK.mobj.spawnAura = function(mo, color)	-- spawn a aura around mo
 	if leveltime%2 then return end
 	if not mo or not mo.valid then return end
 	color = $ or SKINCOLOR_TEAL
+	assert(type(color) == "number", "Error: spawnAura expects a number")
 	local baseangle = P_RandomRange(1, 360)*ANG1
 	local dist = 30
 	for i = 0, 12 do
@@ -53,6 +54,7 @@ RK.mobj.spawnArrow = function(mo, target, dist)
 	-- Need both a source 'mo' and a target 'mo'
 	if not mo or not mo.valid then return end
 	if not target or not target.valid then return end
+	assert(type(dist) == "number", "Error: spawnArrow expects a number")
 	
 	local arw = P_SpawnMobj(mo.x, mo.y, mo.z + mo.height/2, MT_DUMMY)
 	arw.state = S_RKAW1
@@ -72,6 +74,7 @@ end
 RK.mobj.spawnSmoke = function(mo, freq)
 	if not mo or not mo.valid then return end
 	freq = $ or 3
+	assert(type(freq) == "number", "Error: spawnSmoke expects a number")
 
 	if not (leveltime%freq) then
 		local r = mo.radius>>FRACBITS
@@ -88,6 +91,37 @@ RK.mobj.spawnSmoke = function(mo, freq)
 		smoke.scalespeed = FRACUNIT/(TICRATE/2)
 		smoke.destscale = FRACUNIT
 	end
+end
+
+RK.mobj.spawnMobjPercent = function(mo)
+	assert(type(mo.percent) == "number", "Error: spawnMobjPercent expects a number")
+	local nstr = tostring(mo.percent)
+	local nlen = nstr:len()
+	
+	local num = {}
+	for i = 0, 9 -- 0 - 9 (S_NMBR0 - S_NMBR9)
+		table.insert(num, S_NMBR0+i)
+	end
+	
+	for i = 1, nlen do -- How long is the string?
+		local n = P_SpawnMobj(mo.x + mo.momx - FixedMul(cos(R_PointToAngle(mo.x, mo.y)+ANGLE_90), ((i-1)*(16*FRACUNIT))-(nlen*(8*FRACUNIT))), 
+								mo.y + mo.momy - FixedMul(sin(R_PointToAngle(mo.x, mo.y)+ANGLE_90), ((i-1)*(16*FRACUNIT))-(nlen*(8*FRACUNIT))), 
+								mo.z + 5*mo.height/2, MT_DUMMY)
+		--print(nstr:sub(i, 1+(i-1)))
+		n.state = num[tonumber(nstr:sub(i, 1+(i-1)))+1] -- Print this character in the string
+		n.angle = R_PointToAngle(mo.x, mo.y)-ANGLE_90
+		n.target = mo
+		n.scale = 2*FRACUNIT
+	end
+
+	-- Percent Char (S_NMBR10)
+	local per = P_SpawnMobj(mo.x + mo.momx - FixedMul(cos(R_PointToAngle(mo.x, mo.y)+ANGLE_90), (nlen)*(16*FRACUNIT)-(nlen*(8*FRACUNIT))), 
+								mo.y + mo.momy - FixedMul(sin(R_PointToAngle(mo.x, mo.y)+ANGLE_90), (nlen)*(16*FRACUNIT)-(nlen*(8*FRACUNIT))), 
+								mo.z + 5*mo.height/2, MT_DUMMY)
+	per.state = S_NMBR10
+	per.angle = R_PointToAngle(mo.x, mo.y)-ANGLE_90
+	per.target = mo
+	per.scale = 2*FRACUNIT
 end
 
 -- Search for other player objects around 'mo' and return the count.
@@ -115,6 +149,7 @@ end*/
 RK.mobj.SearchForPlayersInRadius = function(mo, dist, avar)
 	if not avar then return end -- Now arrows to display, stop here!
 	if not mo or not mo.valid then return end
+	assert(type(dist) == "number", "Error: SearchForPlayersInRadius expects a number")
 	
 	local closestmo = nil
 	local closestdist = dist -- Maximum possible distance to search.
@@ -126,13 +161,15 @@ RK.mobj.SearchForPlayersInRadius = function(mo, dist, avar)
 			if not p.mo.rock or not p.mo.rock.valid then continue end -- No rock to reference. Skip.
 			if (p.mo.rock == mo) then continue end -- Our rock? Skip us
 			
-			local idist = FixedHypot(FixedHypot(p.mo.rock.x - mo.x, p.mo.rock.y - mo.y), p.mo.rock.z - mo.z)
+			--local idist = FixedHypot(FixedHypot(p.mo.rock.x - mo.x, p.mo.rock.y - mo.y), p.mo.rock.z - mo.z)
+			local idist = FixedHypot(p.mo.rock.x - mo.x, p.mo.rock.y - mo.y) -- Do not care about 'Z'
 			if (idist < 8*mo.radius) then
 				continue -- TOO CLOSE!!
 			end
 			
-			RK.mobj.spawnArrow(mo, p.mo, dist)
+			RK.mobj.spawnArrow(mo, p.mo.rock, dist)
 		end
+		 
 	elseif (avar == 1) then -- Spawn arrows for the closest player seen
 		for p in players.iterate do
 			if p.spectator then continue end -- We're a spectator. Skip.
@@ -141,7 +178,8 @@ RK.mobj.SearchForPlayersInRadius = function(mo, dist, avar)
 			if not p.mo.rock or not p.mo.rock.valid then continue end -- No rock to reference. Skip.
 			if (p.mo.rock == mo) then continue end -- Our rock? Skip us
 			
-			local idist = FixedHypot(FixedHypot(p.mo.rock.x - mo.x, p.mo.rock.y - mo.y), p.mo.rock.z - mo.z)
+			--local idist = FixedHypot(FixedHypot(p.mo.rock.x - mo.x, p.mo.rock.y - mo.y), p.mo.rock.z - mo.z)
+			local idist = FixedHypot(p.mo.rock.x - mo.x, p.mo.rock.y - mo.y) -- Do not care about 'Z'
 			if (idist < 8*mo.radius) then
 				return -- TOO CLOSE!! (Don't process anything else)
 			end
@@ -153,7 +191,7 @@ RK.mobj.SearchForPlayersInRadius = function(mo, dist, avar)
 		end
 		
 		if closestmo then
-			RK.mobj.spawnArrow(mo, closestmo, dist)
+			RK.mobj.spawnArrow(mo, closestmo.rock, dist)
 		end
 	end
 end
@@ -285,11 +323,20 @@ addHook("MobjThinker", function(mo)
 			RK.mobj.spawnAura(mo, mo.target.color)
 		end
 		
-		-- Smoke
-		if mo.percent and (mo.percent >= 75) then
-			local threshold = (6 - (mo.percent/50))
-			if (threshold < 1) then threshold = 1 end
-			RK.mobj.spawnSmoke(mo, threshold)
+		-- Percentage Based goodies
+		if assert(type(mo.percent) == "number") then
+			if (mo.percent >= 75) then
+				local threshold = (6 - (mo.percent/50))
+				if (threshold < 1) then threshold = 1 end
+				RK.mobj.spawnSmoke(mo, threshold)
+			end
+			
+			if mo.target and mo.target.valid
+			and mo.target.player and mo.target.player.valid 
+			and (mo.target.player ~= players[#consoleplayer])
+			and (leveltime%(TICRATE*4) < TICRATE*2) then
+				RK.mobj.spawnMobjPercent(mo)
+			end
 		end
 		
 		RK.mobj.SearchForPlayersInRadius(mo, 512*FRACUNIT, RK.cons.Arrows.value)
