@@ -407,7 +407,7 @@ addHook("MobjMoveCollide", function(tmthing, thing)
 				FreeSetZ(tmthing, thing.z)
 			end
 			
-			if (thing.percent ~= nil)
+			if assert(type(thing.percent) == "number") then
 				thing.percent = $ + impact.intensity/FRACUNIT
 			end
 
