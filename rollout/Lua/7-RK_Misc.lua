@@ -76,9 +76,11 @@ RK.hud.game = function(v, p)
 						med = v.cachePatch("RKLM"),
 						low = v.cachePatch("RKLL")
 						}
-		local vflags = V_SNAPTOLEFT|V_SNAPTOBOTTOM|V_ALLOWLOWERCASE
+		local vflags = V_SNAPTOLEFT|V_SNAPTOBOTTOM
+		if p.spectator then vflags = $|V_HUDTRANSHALF end
 		local pname = p.name
 		local mo = p.mo or p.realmo
+		if not mo then return end -- Stop here if `mo` is not found
 		local pface = v.getSprite2Patch(mo.skin, SPR2_SIGN, 0, 0) -- Get this player's icon!
 		local pcolor = v.getColormap(-1, p.skincolor)
 		
@@ -91,22 +93,23 @@ RK.hud.game = function(v, p)
 		v.draw(rkhud.x,
 				rkhud.y - 8 ,
 				rkhud.full,
-				V_SNAPTOLEFT|V_SNAPTOBOTTOM, pcolor)
+				vflags, pcolor)
 		
 		-- Draw the Player Portrait
 		v.drawScaled((rkhud.x+17)*FRACUNIT, 
 					(rkhud.y+15)*FRACUNIT,
 					3*FRACUNIT/4,
 					pface, 
-					V_SNAPTOLEFT|V_SNAPTOBOTTOM, pcolor)
+					vflags, pcolor)
 		
+		-- Rock Percentage or NaN
 		if mo and mo.valid and mo.rock and mo.rock.valid
 			v.drawString(rkhud.x + 60, rkhud.y - 4, mo.rock.percent, vflags, "right")
 		else
-			v.drawString(rkhud.x + 60, rkhud.y - 4, "NaN", vflags, "right")
+			v.drawString(rkhud.x + 60, rkhud.y - 4, "NaN", vflags|V_ALLOWLOWERCASE, "right")
 		end
-		v.drawString(rkhud.x + 60, rkhud.y - 4, "%", vflags, "left")
-		v.drawString(rkhud.x + 38, rkhud.y + 6, pname, vflags, "small-thin")
+		v.drawString(rkhud.x + 60, rkhud.y - 4, "%", vflags, "left") -- "Percent" character
+		v.drawString(rkhud.x + 37, rkhud.y + 7, pname, vflags|V_ALLOWLOWERCASE, "small-thin") -- Player Name
 	end
 end
 

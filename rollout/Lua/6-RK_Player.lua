@@ -70,7 +70,7 @@ addHook("JumpSpecial", function(p)
 				and (p.weapondelay <= 2) -- Not on cooldown
 				and RK.WepRings then
 					-- Code
-					RK.DrainAmmoAmmo(p, pw_automaticring) -- Decrease your weapon ring count by one
+					RK.DrainAmmo(p, pw_automaticring) -- Decrease your weapon ring count by one
 					--S_StartSound(mo, sfx_antiri) -- Play a sound...
 					S_StartSound(mo.target, sfx_kc65)
 					p.weapondelay = 5*TICRATE -- Cooldown
@@ -82,7 +82,7 @@ addHook("JumpSpecial", function(p)
 				and (p.weapondelay <= 2) -- Not on cooldown
 				and RK.WepRings then
 					-- Code
-					RK.DrainAmmoAmmo(p, pw_bouncering) -- Decrease your weapon ring count by one
+					RK.DrainAmmo(p, pw_bouncering) -- Decrease your weapon ring count by one
 					--S_StartSound(mo, sfx_antiri) -- Play a sound...
 					S_StartSound(mo.target, sfx_kc65)
 					p.weapondelay = 5*TICRATE -- Cooldown
@@ -94,7 +94,7 @@ addHook("JumpSpecial", function(p)
 				and (p.weapondelay <= 2) -- Not on cooldown
 				and RK.WepRings then
 					-- Code
-					RK.DrainAmmoAmmo(p, pw_scatterring) -- Decrease your weapon ring count by one
+					RK.DrainAmmo(p, pw_scatterring) -- Decrease your weapon ring count by one
 					--S_StartSound(mo, sfx_antiri) -- Play a sound...
 					S_StartSound(mo.target, sfx_kc65)
 					p.weapondelay = 5*TICRATE -- Cooldown
@@ -106,7 +106,7 @@ addHook("JumpSpecial", function(p)
 				and (p.weapondelay <= 2) -- Not on cooldown
 				and RK.WepRings then
 					-- Code
-					RK.DrainAmmoAmmo(p, pw_grenadering) -- Decrease your weapon ring count by one
+					RK.DrainAmmo(p, pw_grenadering) -- Decrease your weapon ring count by one
 					--S_StartSound(mo, sfx_antiri) -- Play a sound...
 					S_StartSound(mo.target, sfx_kc65)
 					p.weapondelay = 5*TICRATE -- Cooldown
@@ -118,7 +118,7 @@ addHook("JumpSpecial", function(p)
 				and (p.weapondelay <= 2) -- Not on cooldown
 				and RK.WepRings then
 					-- Code
-					RK.DrainAmmoAmmo(p, pw_explosionring) -- Decrease your weapon ring count by one
+					RK.DrainAmmo(p, pw_explosionring) -- Decrease your weapon ring count by one
 					--S_StartSound(mo, sfx_antiri) -- Play a sound...
 					S_StartSound(mo.target, sfx_kc65)
 					p.weapondelay = 5*TICRATE -- Cooldown
@@ -130,7 +130,7 @@ addHook("JumpSpecial", function(p)
 				and (p.weapondelay <= 2) -- Not on cooldown
 				and RK.WepRings then
 					-- Code
-					--RK.DrainAmmoAmmo(p, pw_railring) -- Decrease your weapon ring count by one
+					--RK.DrainAmmo(p, pw_railring) -- Decrease your weapon ring count by one
 					--S_StartSound(mo, sfx_antiri) -- Play a sound...
 					S_StartSound(mo.target, sfx_kc65)
 					p.weapondelay = 5*TICRATE -- Cooldown
