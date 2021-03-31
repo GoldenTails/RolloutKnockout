@@ -99,10 +99,11 @@ RK.mobj.spawnMobjPercent = function(mo)
 	local nlen = nstr:len()
 	
 	local num = {}
-	for i = 0, 9 -- 0 - 9 (S_NMBR0 - S_NMBR9)
+	for i = 0, 9 do -- 0 - 9 (S_NMBR0 - S_NMBR9)
 		table.insert(num, S_NMBR0+i)
 	end
-	
+
+	mo.percent_t = {}
 	for i = 1, nlen do -- How long is the string?
 		local n = P_SpawnMobj(mo.x + mo.momx - FixedMul(cos(R_PointToAngle(mo.x, mo.y)+ANGLE_90), ((i-1)*(16*FRACUNIT))-(nlen*(8*FRACUNIT))), 
 								mo.y + mo.momy - FixedMul(sin(R_PointToAngle(mo.x, mo.y)+ANGLE_90), ((i-1)*(16*FRACUNIT))-(nlen*(8*FRACUNIT))), 
@@ -111,7 +112,9 @@ RK.mobj.spawnMobjPercent = function(mo)
 		n.state = num[tonumber(nstr:sub(i, 1+(i-1)))+1] -- Print this character in the string
 		n.angle = R_PointToAngle(mo.x, mo.y)-ANGLE_90
 		n.target = mo
+		table.insert(mo.percent_t, n)
 		n.scale = 2*FRACUNIT
+		n.flags2 = $ | MF2_DONTDRAW -- This will be removed in the following function
 	end
 
 	-- Percent Char (S_NMBR10)
@@ -121,7 +124,9 @@ RK.mobj.spawnMobjPercent = function(mo)
 	per.state = S_NMBR10
 	per.angle = R_PointToAngle(mo.x, mo.y)-ANGLE_90
 	per.target = mo
+	table.insert(mo.percent_t, per)
 	per.scale = 2*FRACUNIT
+	per.flags2 = $ | MF2_DONTDRAW -- This will be removed in the following function
 end
 
 -- Search for other player objects around 'mo' and return the count.
@@ -163,13 +168,24 @@ RK.mobj.SearchForPlayersInRadius = function(mo, dist, avar)
 			
 			--local idist = FixedHypot(FixedHypot(p.mo.rock.x - mo.x, p.mo.rock.y - mo.y), p.mo.rock.z - mo.z)
 			local idist = FixedHypot(p.mo.rock.x - mo.x, p.mo.rock.y - mo.y) -- Do not care about 'Z'
-			if (idist < 8*mo.radius) then
-				continue -- TOO CLOSE!!
-			end
+			if (idist < 8*mo.radius) or (idist > closestdist) then continue end -- Not in our distance "Sweet spot"
 			
 			RK.mobj.spawnArrow(mo, p.mo.rock, dist)
+			
+			local rock = p.mo.rock
+			if rock.target and rock.target.valid 
+			and rock.target.player and rock.target.player.valid
+			and (rock.target.player ~= consoleplayer) then
+				RK.mobj.spawnMobjPercent(rock)
+			end
+			if rock.percent_t and (#rock.percent_t > 0) then
+				for i = 1, #rock.percent_t do
+					rock.percent_t[i].flags2 = $ & ~MF2_DONTDRAW
+				end
+				rock.percent_t = {}
+			end
 		end
-		 
+
 	elseif (avar == 1) then -- Spawn arrows for the closest player seen
 		for p in players.iterate do
 			if p.spectator then continue end -- We're a spectator. Skip.
@@ -192,6 +208,18 @@ RK.mobj.SearchForPlayersInRadius = function(mo, dist, avar)
 		
 		if closestmo then
 			RK.mobj.spawnArrow(mo, closestmo.rock, dist)
+
+			local rock = closestmo.rock
+			if rock.target and rock.target.valid 
+			and rock.target.player and rock.target.player.valid
+			and (rock.target.player ~= consoleplayer) then
+				RK.mobj.spawnMobjPercent(rock)
+			end
+			if rock.percent_t and (#rock.percent_t > 0) then
+				for i = 1, #rock.percent_t do
+					rock.percent_t[i].flags2 = $ & ~MF2_DONTDRAW
+				end
+			end
 		end
 	end
 end
@@ -331,12 +359,12 @@ addHook("MobjThinker", function(mo)
 				RK.mobj.spawnSmoke(mo, threshold)
 			end
 			
-			if mo.target and mo.target.valid
-			and mo.target.player and mo.target.player.valid 
-			and (mo.target.player ~= players[#consoleplayer])
-			and (leveltime%(TICRATE*4) < TICRATE*2) then
-				RK.mobj.spawnMobjPercent(mo)
-			end
+			--if mo.target and mo.target.valid
+			--and mo.target.player and mo.target.player.valid 
+			--and (mo.target.player ~= players[#consoleplayer])
+			--and (leveltime%(TICRATE*4) < TICRATE*2) then
+			--	RK.mobj.spawnMobjPercent(mo)
+			--end
 		end
 		
 		RK.mobj.SearchForPlayersInRadius(mo, 512*FRACUNIT, RK.cons.Arrows.value)
@@ -349,7 +377,7 @@ addHook("MobjThinker", function(mo)
 	and G_IsRolloutGametype() then
 		if (mo.state == S_NIGHTSCORE100) then
 			mo.color = (leveltime%69) -- NICE
-			if (mo.fuse < TICRATE) then mo.flags2 = $ ^^ MF2_DONTDRAW end
+			if (mo.fuse < TICRATE) then mo.flags2 = $ ^^ MF2_DONTDRAW end		
 		end
 	end
 end, MT_DUMMY)
