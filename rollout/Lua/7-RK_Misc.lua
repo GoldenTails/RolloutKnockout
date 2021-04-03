@@ -81,7 +81,7 @@ RK.hud.game = function(v, p)
 		local pname = p.name
 		local mo = p.mo or p.realmo
 		if not mo then return end -- Stop here if `mo` is not found
-		local pface = v.getSprite2Patch(mo.skin, SPR2_SIGN, 0, 0) -- Get this player's icon!
+		local pface, pface2 = v.getSprite2Patch(mo.skin, SPR2_SIGN, 0, 0), v.getSprite2Patch(mo.skin, SPR2_LIFE, 0, 0) -- Get this player's icon!
 		local pcolor = v.getColormap(-1, p.skincolor)
 		
 		-- Trim the characters to a Max of 8 characters.
@@ -101,6 +101,32 @@ RK.hud.game = function(v, p)
 					3*FRACUNIT/4,
 					pface, 
 					vflags, pcolor)
+		
+		-- Stock icon
+		if (gametype == GT_ROLLOUT_STOCK) and (p.lives > 0)
+			if (p.lives < 5) -- Lives count is less than 5
+				for i = 0, p.lives-1 do
+					v.drawScaled((rkhud.x + 43 + (i*11))*FRACUNIT, 
+								(rkhud.y - 10)*FRACUNIT,
+								FRACUNIT/2, 
+								pface2, 
+								vflags, pcolor)
+				end
+			else -- Lives count is 5 or more
+				-- [icon] x 5
+				v.drawScaled((rkhud.x + 43)*FRACUNIT, 
+							(rkhud.y - 10)*FRACUNIT,
+							FRACUNIT/2, 
+							pface2, 
+							vflags, pcolor)
+				v.drawString((rkhud.x + 54),
+							(rkhud.y - 14), "x", 
+							vflags|V_ALLOWLOWERCASE, "small-right")
+				v.drawString((rkhud.x + 65),
+							(rkhud.y - 16), p.lives, 
+							vflags|V_ALLOWLOWERCASE, "right")
+			end
+		end
 		
 		-- Rock Percentage or NaN
 		if mo and mo.valid and mo.rock and mo.rock.valid
@@ -131,7 +157,11 @@ RK.hud.scores = function(v)
 		-- Collect the current player userdata structures.
 		RK.ptable.u = {}
 		for p in players.iterate do
-			table.insert(RK.ptable.u, {p, p.score})
+			if (gametype == GT_ROLLOUT_STOCK) then
+				table.insert(RK.ptable.u, {p, p.lives})
+			else
+				table.insert(RK.ptable.u, {p, p.score})
+			end
 		end
 		
 		-- And sort those player userdata structures by score.
@@ -151,18 +181,32 @@ RK.hud.scores = function(v)
 			v.drawString(offset.x, vsize.y/12, "#", vflags|V_YELLOWMAP)
 			v.drawString((offset.x + 136), vsize.y/12, "Name", vflags|V_YELLOWMAP)
 			v.drawString(7*offset.x, vsize.y/12, "R. DMG", vflags|V_YELLOWMAP)
-			v.drawString(10*offset.x, vsize.y/12, "Score", vflags|V_YELLOWMAP)
+			if (gametype == GT_ROLLOUT_STOCK) then
+				v.drawString(10*offset.x, vsize.y/12, "Lives", vflags|V_YELLOWMAP) -- Lives count in STOCK
+			else
+				v.drawString(10*offset.x, vsize.y/12, "Score", vflags|V_YELLOWMAP) -- Score #
+			end
 		else
 			-- Headers
+			-- Left side
 			v.drawString(offset.xh, vsize.y/12, "#", vflags|V_YELLOWMAP, "thin")
 			v.drawString((offset.xh + 136), vsize.y/12, "Name", vflags|V_YELLOWMAP, "thin")
 			v.drawString(7*offset.xh, vsize.y/12, "R. DMG", vflags|V_YELLOWMAP, "thin")
-			v.drawString(10*offset.xh, vsize.y/12, "Score", vflags|V_YELLOWMAP, "thin")
+			if (gametype == GT_ROLLOUT_STOCK) then
+				v.drawString(10*offset.xh, vsize.y/12, "Lives", vflags|V_YELLOWMAP, "thin")
+			else
+				v.drawString(10*offset.xh, vsize.y/12, "Score", vflags|V_YELLOWMAP, "thin")
+			end
 			
+			-- Right side
 			v.drawString(offset.xh2, vsize.y/12, "#", vflags|V_YELLOWMAP, "thin")
 			v.drawString((offset.xh2 + 136), vsize.y/12, "Name", vflags|V_YELLOWMAP, "thin")
 			v.drawString(7*offset.xh + vsize.x/2, vsize.y/12, "R. DMG", vflags|V_YELLOWMAP, "thin")
-			v.drawString(10*offset.xh + vsize.x/2, vsize.y/12, "Score", vflags|V_YELLOWMAP, "thin")
+			if (gametype == GT_ROLLOUT_STOCK) then
+				v.drawString(10*offset.xh + vsize.x/2, vsize.y/12, "Lives", vflags|V_YELLOWMAP, "thin") -- Lives count in STOCK
+			else
+				v.drawString(10*offset.xh + vsize.x/2, vsize.y/12, "Score", vflags|V_YELLOWMAP, "thin") -- Score #
+			end
 			-- White line divider
 			v.drawFill(vsize.x/2, vsize.y/8, 4, vsize.y, vflags|SKINCOLOR_WHITE)
 		end
@@ -198,8 +242,14 @@ RK.hud.scores = function(v)
 				else
 					v.drawString(8*offset.x + offset.xh, vsize.y/6 + (i-1)*70, "NaN".."%", vflags|V_ALLOWLOWERCASE, "right") -- Rock Damage
 				end
-				v.drawString(11*offset.x + offset.xh, vsize.y/6 + (i-1)*70, p.score, vflags, "right") -- Score #
-			
+
+				-- Gametype differences
+				if (gametype == GT_ROLLOUT_STOCK) then
+					v.drawString(11*offset.x + offset.xh, vsize.y/6 + (i-1)*70, p.lives, vflags, "right") -- Lives count in STOCK
+				else
+					v.drawString(11*offset.x + offset.xh, vsize.y/6 + (i-1)*70, p.score, vflags, "right") -- Score #
+				end
+				
 			else -- More than 8 players
 				if (i <= 8) then
 					v.drawString(offset.xh, vsize.y/6 + (i-1)*70, i, vflags, "thin") -- Player node number
@@ -220,7 +270,13 @@ RK.hud.scores = function(v)
 					else
 						v.drawString((9*offset.x)/2, vsize.y/6 + (i-1)*70, "NaN".."%", vflags|V_ALLOWLOWERCASE, "thin-right") -- Rock Damage
 					end
-					v.drawString(11*offset.xh + offset.x/4, vsize.y/6 + (i-1)*70, p.score, vflags, "thin-right") -- Score #
+
+					-- Gametype differences
+					if (gametype == GT_ROLLOUT_STOCK) then
+						v.drawString(11*offset.xh + offset.x/4, vsize.y/6 + (i-1)*70, p.lives, vflags, "thin-right") -- Lives count in STOCK
+					else
+						v.drawString(11*offset.xh + offset.x/4, vsize.y/6 + (i-1)*70, p.score, vflags, "thin-right") -- Score #
+					end
 				elseif (i <= 16) then
 					v.drawString(offset.xh2, vsize.y/6 + (i-9)*70, i, vflags, "thin") -- Player node number
 					if p.spectator or (p.playerstate == PST_DEAD) then
@@ -240,12 +296,18 @@ RK.hud.scores = function(v)
 					else
 						v.drawString((9*offset.x)/2 + vsize.x/2, vsize.y/6 + (i-9)*70, "NaN".."%", vflags|V_ALLOWLOWERCASE, "thin-right") -- Rock Damage
 					end
-					v.drawString(11*offset.xh + offset.x/4 + vsize.x/2, vsize.y/6 + (i-9)*70, p.score, vflags, "thin-right") -- Score #
+					
+					-- Gametype differences
+					if (gametype == GT_ROLLOUTSTOCK) then
+						v.drawString(11*offset.xh + offset.x/4 + vsize.x/2, vsize.y/6 + (i-9)*70, p.score, vflags, "thin-right") -- Score #-- Lives count in STOCK
+					else
+						v.drawString(11*offset.xh + offset.x/4 + vsize.x/2, vsize.y/6 + (i-9)*70, p.score, vflags, "thin-right") -- Score #
+					end
 				end
 			end
 		end
 
-		v.drawString(5,(95*vsize.y)/100,RK.gt.rk.name, vflags) -- Gamemode name
+		v.drawString(5,(95*vsize.y)/100,RK.gt[G_GetCurrentRKGametype()].name, vflags) -- Gamemode name
 	else
 		hud.enable("rankings")
 	end
