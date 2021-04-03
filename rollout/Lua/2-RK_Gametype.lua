@@ -15,34 +15,19 @@ freeslot(
 --"TOL_ROLLOUTRACE"
 )
 
-table.insert(RK.gt, {
-	name = "Rollout Knockout (Time)",
-	identifier = "ROLLOUT_TIME", -- GT_ROLLOUT_TIME
+RK.gt.rk = {
+	name = "Rollout Knockout",
+	identifier = "ROLLOUT",
 	typeoflevel = TOL_ROLLOUT,
 	rules = GTR_SPECTATORS|GTR_HURTMESSAGES|GTR_NOSPECTATORSPAWN|GTR_DEATHMATCHSTARTS|GTR_TIMELIMIT,
 	intermissiontype = int_match,
 	rankingtype = GT_MATCH,
 	defaulttimelimit = 5,
 	headercolor = 148,
-	description = "You and your opponents are all on rocks! Knock everyone off the stage and come out on top!"
-})
+	description = "You and your opponents are all on rocks, whaddya do? Knock them off the area, of course!"
+}
 
-table.insert(RK.gt, {
-	name = "Rollout Knockout (Stock)",
-	identifier = "ROLLOUT_STOCK", -- GT_ROLLOUT_STOCK
-	typeoflevel = TOL_ROLLOUT,
-	rules = GTR_SPECTATORS|GTR_HURTMESSAGES|GTR_NOSPECTATORSPAWN|GTR_DEATHMATCHSTARTS|GTR_TIMELIMIT|GTR_LIVES,
-	intermissiontype = int_match,
-	rankingtype = GT_MATCH,
-	defaulttimelimit = 8,
-	headercolor = 148,
-	description = "You and your opponents are all on rocks! Knock everyone off the stage and come out on top! Super Bash Sisters style!"
-})
-
--- Create dynamic-size gametype table. All we have to do is call table.insert.
-for i = 1, #RK.gt do
-	G_AddGametype(RK.gt[i])
-end
+G_AddGametype(RK.gt.rk)
 
 /*G_AddGametype({
     name = "Rollout Race",
@@ -59,13 +44,7 @@ end
 
 -- Check to see if we are in a Rollout Gametype
 rawset(_G, "G_IsRolloutGametype", function()
-	return (gametype == GT_ROLLOUT_TIME) or (gametype == GT_ROLLOUT_STOCK)-- or (gametype == GT_RROLLOUT)
-end)
-
--- Re-index ROLLOUT gamemodes to an index of 1
-rawset(_G, "G_GetCurrentRKGametype", function()
-	local numgametypes = GT_ROLLOUT_TIME - 1
-	return (gametype - numgametypes)
+	return (gametype == GT_ROLLOUT)-- or (gametype == GT_RROLLOUT)
 end)
 
 RK.DrainAmmo = function(p, power, amount)
