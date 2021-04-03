@@ -8,6 +8,19 @@
 -- Date: 3-21-21
 --
 
+RK.plyr = {}
+
+RK.plyr.countInGamePlayers = function()
+	local playeringame = 0
+	for p in players.iterate
+		if p.spectator continue end -- We're a spectator. Skip.
+		if not p.mo continue end -- Not a mo object. Skip.
+		if p.bot continue end  -- Player is a bot. Skip.
+		playeringame = $ + 1
+	end
+	return playeringame
+end
+
 addHook("PreThinkFrame", do
 	for p in players.iterate
 		if (p.weapondelay <= 2) then

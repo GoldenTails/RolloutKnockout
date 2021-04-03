@@ -76,7 +76,7 @@ RK.hud.game = function(v, p)
 						med = v.cachePatch("RKLM"),
 						low = v.cachePatch("RKLL")
 						}
-		local vflags = V_SNAPTOLEFT|V_SNAPTOBOTTOM
+		local vflags = V_SNAPTOLEFT|V_SNAPTOBOTTOM|V_PERPLAYER
 		if p.spectator then vflags = $|V_HUDTRANSHALF end
 		local pname = p.name
 		local mo = p.mo or p.realmo
@@ -120,7 +120,7 @@ RK.hud.game = function(v, p)
 							pface2, 
 							vflags, pcolor)
 				v.drawString((rkhud.x + 54),
-							(rkhud.y - 14), "x", 
+							(rkhud.y - 12), "x", 
 							vflags|V_ALLOWLOWERCASE, "small-right")
 				v.drawString((rkhud.x + 65),
 							(rkhud.y - 16), p.lives, 
@@ -331,6 +331,22 @@ addHook("HurtMsg", function(p, i, s)
 		return false
 	end
 end, MT_PLAYER)
+
+addHook("TeamSwitch", function(p, team, fromspectators)
+	if G_IsRolloutGametype() then
+		if p and p.valid then
+			-- Cheeky check for those that die, become a spectator, and attempt to re-enter the game...
+			if fromspectators
+			and not p.lives then
+				CONS_Printf(p, "You're out of lives! You can't enter the game again!")
+				return false
+			elseif not fromspectators -- Although, becoming a spectator deducts a life by default.
+				p.lives = $ + 1 -- Add one to be generous.
+				return true
+			end
+		end
+	end
+end)
 
 hud.add(RK.hud.game, "game")
 hud.add(RK.hud.scores, "scores")

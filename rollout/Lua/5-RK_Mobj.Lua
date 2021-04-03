@@ -78,11 +78,10 @@ RK.mobj.spawnSmoke = function(mo, freq)
 
 	if not (leveltime%freq) then
 		local r = mo.radius>>FRACBITS
-		local smoke = P_SpawnMobj(
-				mo.x + (P_RandomRange(-r, r)<<FRACBITS),
-				mo.y + (P_RandomRange(-r, r)<<FRACBITS),
-				mo.z + (P_RandomKey(mo.height>>FRACBITS)<<FRACBITS),
-				MT_DUMMY)
+		local smoke = P_SpawnMobj(mo.x + (P_RandomRange(-r, r)<<FRACBITS),
+									mo.y + (P_RandomRange(-r, r)<<FRACBITS),
+									mo.z + (P_RandomKey(mo.height>>FRACBITS)<<FRACBITS),
+									MT_DUMMY)
 		smoke.state = S_TNTDUST_5
 		smoke.angle = R_PointToAngle2(mo.x, mo.y, smoke.x, smoke.y)
 		P_InstaThrust(smoke, smoke.angle, FRACUNIT/2)
@@ -93,8 +92,31 @@ RK.mobj.spawnSmoke = function(mo, freq)
 	end
 end
 
+RK.mobj.spawnRecoilSmoke = function(mo)
+	if not mo or not mo.valid then return end
+	
+	if not (leveltime%4) then
+		local trail = P_SpawnMobj(mo.x,
+									mo.y,
+									mo.z + mo.height/2, 
+									MT_DUMMY)
+		trail.state = S_TNTDUST_2
+		trail.colorized = true
+		trail.color = mo.lastbumper.color or SKINCOLOR_GREY
+		trail.angle = R_PointToAngle2(trail.x, trail.y, mo.x + mo.momx, mo.y + mo.momy) -- Always point to your target
+		trail.rollangle = P_RandomKey(36)*ANG10
+		trail.destscale = 2*FRACUNIT
+		trail.scalespeed = FRACUNIT/(TICRATE/2)
+		
+		trail.flags = $|MF_NOGRAVITY
+		if (mo.eflags & MFE_VERTICALFLIP) then trail.flags = $|MFE_VERTICALFLIP end
+		P_InstaThrust(trail, P_RandomKey(36)*ANG10, FRACUNIT)
+		P_SetObjectMomZ(trail, FRACUNIT, false)
+	end
+end
+
 RK.mobj.spawnMobjPercent = function(mo)
-	assert(type(mo.percent) == "number", "Error: spawnMobjPercent expects a number")
+	assert(type(mo.percent) == "number", "Error: spawnMobjPercent mo does not have a .percent!")
 	local nstr = tostring(mo.percent)
 	local nlen = nstr:len()
 	
@@ -144,7 +166,6 @@ end
 	end
 	return pcount
 end*/
-
 
 RK.mobj.SearchForPlayersInRadius = function(mo, dist, avar)
 	if not avar then return end -- Now arrows to display, stop here!
@@ -306,24 +327,9 @@ addHook("MobjThinker", function(mo)
 			end
 			
 			-- Impact recoil. Spawn a dust trail.
-			if not (leveltime%4) and (mo.lastbumpertics > 9*TICRATE)
+			if (mo.lastbumpertics > 9*TICRATE)
 			and (FixedHypot(mo.momx, mo.momy) > (20*FRACUNIT)) then
-				local trail = P_SpawnMobj(mo.x,
-										mo.y,
-										mo.z + mo.height/2, 
-										MT_DUMMY)
-				trail.state = S_TNTDUST_2
-				trail.colorized = true
-				trail.color = mo.lastbumper.color
-				trail.angle = R_PointToAngle2(trail.x, trail.y, mo.x + mo.momx, mo.y + mo.momy) -- Always point to your target
-				trail.rollangle = P_RandomKey(36)*ANG10
-				trail.destscale = 2*FRACUNIT
-				trail.scalespeed = FRACUNIT/(TICRATE/2)
-				
-				trail.flags = $|MF_NOGRAVITY
-				if (mo.eflags & MFE_VERTICALFLIP) then trail.flags = $|MFE_VERTICALFLIP end
-				P_InstaThrust(trail, P_RandomKey(36)*ANG10, FRACUNIT)
-				P_SetObjectMomZ(trail, FRACUNIT, false)
+				RK.mobj.spawnRecoilSmoke(mo)
 			end
 		else -- mo.lastbumper not valid
 			mo.lastbumpertics = 0
@@ -357,7 +363,7 @@ addHook("MobjThinker", function(mo)
 		
 		if mo.target and mo.target.valid
 		and mo.target.player and mo.target.player.valid
-		and mo.target.player == consoleplayer then
+		and mo.target.player == players[#consoleplayer] then
 			local closestmo = RK.mobj.look4ClosestMo(mo, 512*FRACUNIT, MT_ROLLOUTROCK)
 			if closestmo then
 				RK.mobj.spawnMobjPercent(closestmo)
@@ -386,7 +392,7 @@ addHook("MobjCollide", function(thing, tmthing)
 			return -- Out of range
 		end
 		
-		if (thing.type == MT_ROLLOUTROCK) and (tmthing.type == MT_ROLLOUTROCK) then
+		if (thing.type == tmthing.type) then
 			thing.bumpcount = $ + 1
 			thing.bumpcounttics = TICRATE/2
 		end

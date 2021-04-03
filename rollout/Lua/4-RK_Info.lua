@@ -20,12 +20,6 @@ mobjinfo[MT_DUMMY] = {
 	flags = MF_NOGRAVITY|MF_NOCLIPTHING|MF_NOBLOCKMAP|MF_NOCLIPHEIGHT|MF_NOCLIP,
 }
 
-freeslot("SPR_NMBR")
-for i = 1, 11 -- 0 - 9 (10) and Percent
-	freeslot("S_NMBR"..(i-1))
-	states[S_NMBR0+(i-1)] = {SPR_NMBR, (i-1)|FF_FULLBRIGHT|FF_PAPERSPRITE, 2, nil, 0, 0, S_NULL}
-end
-
 for i = 1, 3
 	freeslot("S_AURA"..i)
 end
@@ -41,6 +35,13 @@ end
 local trans = {TR_TRANS50, TR_TRANS60, TR_TRANS70, TR_TRANS80, TR_TRANS60}
 for i = 0,4
 	states[S_FRAG1+i]	= {SPR_SUMN, (i+1)|FF_FULLBRIGHT|trans[i+1], 3, nil, 0, 0, i<3 and S_FRAG2+i or S_NULL}
+end
+
+-- Flame
+freeslot("SPR_NMBR")
+for i = 1, 11 -- 0 - 9 (10) and Percent
+	freeslot("S_NMBR"..(i-1))
+	states[S_NMBR0+(i-1)] = {SPR_NMBR, (i-1)|FF_FULLBRIGHT|FF_PAPERSPRITE, 2, nil, 0, 0, S_NULL}
 end
 
 -- [Impact]
