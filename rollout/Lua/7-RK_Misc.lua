@@ -333,14 +333,15 @@ addHook("HurtMsg", function(p, i, s)
 end, MT_PLAYER)
 
 addHook("TeamSwitch", function(p, team, fromspectators)
-	if G_IsRolloutGametype() then
+	if G_IsRolloutGametype() and G_GametypeUsesLives() then
 		if p and p.valid then
 			-- Cheeky check for those that die, become a spectator, and attempt to re-enter the game...
 			if fromspectators
-			and not p.lives then
-				CONS_Printf(p, "You're out of lives! You can't enter the game again!")
+			and p.lives <= 0 then
+				CONS_Printf(p, "You're out of lives! Please wait to enter the next game!")
 				return false
-			elseif not fromspectators -- Although, becoming a spectator deducts a life by default.
+			elseif not fromspectators -- Although, becoming a spectator deducts a life by default...
+			and (p.playerstate ~= PST_DEAD) then -- Not already dead?
 				p.lives = $ + 1 -- Add one to be generous.
 				return true
 			end

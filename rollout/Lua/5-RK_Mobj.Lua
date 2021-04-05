@@ -363,7 +363,8 @@ addHook("MobjThinker", function(mo)
 		
 		if mo.target and mo.target.valid
 		and mo.target.player and mo.target.player.valid
-		and mo.target.player == players[#consoleplayer] then
+		and not splitscreen
+		and (mo.target.player == players[#consoleplayer]) then
 			local closestmo = RK.mobj.look4ClosestMo(mo, 512*FRACUNIT, MT_ROLLOUTROCK)
 			if closestmo then
 				RK.mobj.spawnMobjPercent(closestmo)
@@ -379,6 +380,20 @@ addHook("MobjThinker", function(mo)
 		if (mo.state == S_NIGHTSCORE100) then
 			mo.color = (leveltime%69) -- NICE
 			if (mo.fuse < TICRATE) then mo.flags2 = $ ^^ MF2_DONTDRAW end		
+		elseif (mo.state == S_THOK) then
+			if (mo.threshold == 100)
+			and not (leveltime%2) then
+				mo.flags2 = $ ^^ MF2_DONTDRAW
+			end
+			
+			if (mo.threshold == 101)
+				mo.extravalue1 = $ or 1
+				if (mo.extravalue1 >= 7) then return end
+				if (leveltime%7) then
+					mo.extravalue1 = $ + 1
+				end
+				mo.frame = $ | (FF_TRANS10 * mo.extravalue1)
+			end
 		end
 	end
 end, MT_DUMMY)

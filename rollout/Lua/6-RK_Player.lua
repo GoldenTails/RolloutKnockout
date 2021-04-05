@@ -21,6 +21,71 @@ RK.plyr.countInGamePlayers = function()
 	return playeringame
 end
 
+RK.plyr.deathThink1 = function(p)
+	if not p or not p.valid then return end
+	if not p.mo or not p.mo.valid then return end
+	
+	local mo = p.mo -- Simplify
+	if (mo.fuse > 1) 
+	and not (leveltime%7) then
+			local r = mo.radius>>FRACBITS
+			local xpld = P_SpawnMobj(mo.x + (P_RandomRange(-r, r)<<FRACBITS),
+							mo.y + (P_RandomRange(-r, r)<<FRACBITS),
+							mo.z + (P_RandomKey(mo.height>>FRACBITS)<<FRACBITS),
+							MT_SONIC3KBOSSEXPLODE)
+			S_StartSound(xpld, sfx_s3kb4)
+	elseif (mo.fuse == 1) then
+		mo.momx = 0
+		mo.momy = 0
+		mo.momz = 0
+		local xpld = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMY)
+		xpld.state = S_RXPL2
+		xpld.scale = 2*FRACUNIT
+		for px in players.iterate do
+			if (px == p) then continue end
+			if px.spectator then continue end
+			if not px.mo then continue end
+			local idist = FixedHypot(FixedHypot(px.mo.x - p.mo.x, px.mo.y - p.mo.y), px.mo.z - p.mo.z)
+			if (idist < 512*FRACUNIT) then 
+				P_FlashPal(px, 1, 3)
+			end
+		end
+		P_FlashPal(p, 1, 3)
+		--local dust = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMY)
+		--A_Boss5BombExplode(dust, MT_TNTDUST)
+		
+		S_StartSound(mo, sfx_pplode)
+		P_StartQuake(35*FRACUNIT, 5)
+	end
+end
+
+/*RK.plyr.deathThink2 = function(p)
+	if not p or not p.valid then return end
+	if not p.mo or not p.mo.valid then return end
+	
+	local mo = p.mo -- Simplify
+	if (mo.fuse > 1) then
+		-- Nothing special
+	elseif (mo.fuse == 1) then
+		mo.momx = 0
+		mo.momy = 0
+		mo.momz = 0
+		
+		for i = 0, 1 do
+			local xpld = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMY)
+			xpld.color = SKINCOLOR_WHITE
+			xpld.tics = 3*TICRATE
+			xpld.fuse = xpld.tics
+			xpld.threshold = 100+i
+			if (i == 1) then
+				xpld.destscale = 3*FRACUNIT
+				xpld.scalespeed = xpld.destscale/TICRATE
+			end
+		end
+		P_StartQuake(35*FRACUNIT, 5)
+	end
+end*/
+
 addHook("PreThinkFrame", do
 	for p in players.iterate
 		if (p.weapondelay <= 2) then
@@ -190,28 +255,41 @@ addHook("SpinSpecial", function(p)
 end)
 
 addHook("PlayerThink", function(p)
-	if G_IsRolloutGametype()
-	and (p.mo and p.mo.valid)
-	and (p.mo.rock and p.mo.rock.valid)
-	and p.playerstate ~= PST_DEAD then
-		local mo = p.mo
-		if (p.playerstate == PST_LIVE) then p.ingametics = $ + 1 end
-		
-		-- Respawn failsafe
-		if (p.ingametics < 2*TICRATE)
-		and p.mo.rock.bumpcount and (p.mo.rock.bumpcount > 15) then
-			p.playerstate = PST_REBORN
+	if G_IsRolloutGametype() then
+		if p and p.valid
+		and p.mo and p.mo.valid then
+			local mo = p.mo
+
+			if p.mo.rock and p.mo.rock.valid
+			and p.playerstate ~= PST_DEAD then
+				if (p.playerstate == PST_LIVE) then p.ingametics = $ + 1 end
+				
+				-- Respawn failsafe
+				if (p.ingametics < 2*TICRATE)
+				and p.mo.rock.bumpcount and (p.mo.rock.bumpcount > 15) then
+					p.playerstate = PST_REBORN
+				end
+			elseif (p.playerstate == PST_DEAD) then
+				RK.plyr.deathThink1(p)
+			end
 		end
 	end
 end)
 
-/*addHook("MobjDeath", function(mo)
-	-- Check to see if the player died before the rock despawned
+addHook("MobjDeath", function(mo)
 	if G_IsRolloutGametype() then
 		if mo and mo.valid
-		and mo.player and mo.player.valid
-		and mo.rock and mo.rock.valid -- Rock is still valid
-			P_RemoveMobj(mo.rock) -- If the rock still exists, remove it
+		and mo.player and mo.player.valid then
+			mo.player.lives = $ - 1
+			mo.flags = $ & ~(MF_SOLID|MF_SHOOTABLE)
+			mo.flags = $ | (MF_NOBLOCKMAP|MF_NOCLIP|MF_NOCLIPHEIGHT|MF_NOGRAVITY)
+			mo.fuse = TICRATE -- NEEDS to be set to have the player visible on death.
+			mo.state = S_PLAY_PAIN
+			mo.player.playerstate = PST_DEAD
+			mo.momx = $/4
+			mo.momy = $/4
+			P_SetObjectMomZ(mo, 20*FRACUNIT, false)
+			return true
 		end
 	end
-end, MT_PLAYER)*/
+end, MT_PLAYER)
