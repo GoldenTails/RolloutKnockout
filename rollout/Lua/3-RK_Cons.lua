@@ -21,15 +21,3 @@ RK.cons.Respawn = function(p)
 end
 
 COM_AddCommand("rk_respawn", RK.cons.Respawn)
-
--- Arrows Consvar
--- 0: Turns off arrows.
--- 1: Searches for the closest player to you.
--- 2: Searches for all players around you.
-RK.cons.Arrows = CV_RegisterVar({
-	name = "rk_arrows",
-	defaultvalue = 1,
-	flags = 0,
-	PossibleValue = {MIN = 0, MAX = 2},
-	Func = 0,
-})

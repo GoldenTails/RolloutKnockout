@@ -21,6 +21,14 @@ RK.plyr.countInGamePlayers = function()
 	return playeringame
 end
 
+RK.plyr.countTotalPlayers = function()
+	local totalplayers = 0
+	for p in players.iterate
+		totalplayers = $ + 1
+	end
+	return totalplayers	
+end
+
 RK.plyr.deathThink1 = function(p)
 	if not p or not p.valid then return end
 	if not p.mo or not p.mo.valid then return end
@@ -280,12 +288,19 @@ addHook("MobjDeath", function(mo)
 	if G_IsRolloutGametype() then
 		if mo and mo.valid
 		and mo.player and mo.player.valid then
-			mo.player.lives = $ - 1
+			local p = mo.player
 			mo.flags = $ & ~(MF_SOLID|MF_SHOOTABLE)
 			mo.flags = $ | (MF_NOBLOCKMAP|MF_NOCLIP|MF_NOCLIPHEIGHT|MF_NOGRAVITY)
+
+			if not p.bot and not p.spectator and (p.lives ~= INFLIVES) and G_GametypeUsesLives()
+				if not (p.pflags & PF_FINISHED)
+					p.lives = $ - 1
+				end
+			end
+			
 			mo.fuse = TICRATE -- NEEDS to be set to have the player visible on death.
 			mo.state = S_PLAY_PAIN
-			mo.player.playerstate = PST_DEAD
+			p.playerstate = PST_DEAD
 			mo.momx = $/4
 			mo.momy = $/4
 			P_SetObjectMomZ(mo, 20*FRACUNIT, false)

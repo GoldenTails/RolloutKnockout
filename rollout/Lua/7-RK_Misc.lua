@@ -320,9 +320,8 @@ addHook("HurtMsg", function(p, i, s)
 		if not i or not i.valid then return end
 		if not s or not s.valid then return end
 		
-		if (i.type == MT_PLAYER) and i.player
-		and (s.type == MT_PLAYER) and s.player then
-			CONS_Printf(p,s.player.name.." killed "..p.name..".")
+		if (i.type == s.type) and i.player and s.player then
+			print(s.player.name.." killed "..p.name..".")
 			return true
 		else
 			return false

@@ -84,6 +84,7 @@ RK.mobj.spawnSmoke = function(mo, freq)
 									MT_DUMMY)
 		smoke.state = S_TNTDUST_5
 		smoke.angle = R_PointToAngle2(mo.x, mo.y, smoke.x, smoke.y)
+		smoke.rollangle = P_RandomKey(36)*ANG10
 		P_InstaThrust(smoke, smoke.angle, FRACUNIT/2)
 		P_SetObjectMomZ(smoke, FRACUNIT, false)
 		smoke.scale = FRACUNIT/2
@@ -167,54 +168,6 @@ end
 	return pcount
 end*/
 
-RK.mobj.SearchForPlayersInRadius = function(mo, dist, avar)
-	if not avar then return end -- Now arrows to display, stop here!
-	if not mo or not mo.valid then return end
-	assert(type(dist) == "number", "Error: SearchForPlayersInRadius expects a number")
-	
-	local closestmo = nil
-	local closestdist = dist -- Maximum possible distance to search.
-	if (avar == 2) then -- Spawn arrows for all players around you
-		for p in players.iterate do
-			if p.spectator then continue end -- We're a spectator. Skip.
-			if (p.playerstate ~= PST_LIVE) continue end -- Skip anyone not alive
-			if not p.mo then continue end -- Not a mo object. Skip.
-			if not p.mo.rock or not p.mo.rock.valid then continue end -- No rock to reference. Skip.
-			if (p.mo.rock == mo) then continue end -- Our rock? Skip us
-			
-			--local idist = FixedHypot(FixedHypot(p.mo.rock.x - mo.x, p.mo.rock.y - mo.y), p.mo.rock.z - mo.z)
-			local idist = FixedHypot(p.mo.rock.x - mo.x, p.mo.rock.y - mo.y) -- Do not care about 'Z'
-			if (idist < 8*mo.radius) or (idist > dist) then continue end -- Not in our distance "Sweet spot"
-			
-			RK.mobj.spawnArrow(mo, p.mo.rock, dist)
-		end
-
-	elseif (avar == 1) then -- Spawn arrows for the closest player seen
-		for p in players.iterate do
-			if p.spectator then continue end -- We're a spectator. Skip.
-			if (p.playerstate ~= PST_LIVE) continue end -- Skip anyone not alive
-			if not p.mo then continue end -- Not a mo object. Skip.
-			if not p.mo.rock or not p.mo.rock.valid then continue end -- No rock to reference. Skip.
-			if (p.mo.rock == mo) then continue end -- Our rock? Skip us
-			
-			--local idist = FixedHypot(FixedHypot(p.mo.rock.x - mo.x, p.mo.rock.y - mo.y), p.mo.rock.z - mo.z)
-			local idist = FixedHypot(p.mo.rock.x - mo.x, p.mo.rock.y - mo.y) -- Do not care about 'Z'
-			if (idist < 8*mo.radius) then
-				return -- TOO CLOSE!! (Don't process anything else)
-			end
-			
-			if (idist < closestdist) then -- There's a mobj that's closer?
-				closestmo = p.mo -- Then we're the real closest player mobj!
-				closestdist = idist
-			end
-		end
-		
-		if closestmo then
-			RK.mobj.spawnArrow(mo, closestmo.rock, dist)
-		end
-	end
-end
-
 RK.mobj.look4ClosestMo = function(mo, dist, mtype)
 	if not mo or not mo.valid then return end
 	
@@ -261,6 +214,25 @@ addHook("MobjThinker", function(mo)
 				else
 					-- Otherwise, set your color to your target
 					mo.color = mo.target.color
+				end
+			end
+			
+			-- Percentages and Arrows
+			if mo.target.player and mo.target.player.valid then
+				local p = mo.target.player -- Simplify
+				local closestmo = RK.mobj.look4ClosestMo(mo, 512*FRACUNIT, MT_ROLLOUTROCK) -- Look for a mo that's closest to us.
+				
+				if closestmo -- Found one?
+					if (p == players[#consoleplayer]) -- Don't display for us.
+					and not splitscreen then
+						RK.mobj.spawnMobjPercent(closestmo) -- Spawn it's percent!
+					end
+					
+					-- Distance check. Do not care about Z
+					local dist = FixedHypot(closestmo.x - mo.x, closestmo.y - mo.y)
+					if (dist > 8*mo.radius) then
+						RK.mobj.spawnArrow(mo, closestmo, 512*FRACUNIT)
+					end
 				end
 			end
 			
@@ -356,18 +328,6 @@ addHook("MobjThinker", function(mo)
 				local threshold = (6 - (mo.percent/50))
 				if (threshold < 1) then threshold = 1 end
 				RK.mobj.spawnSmoke(mo, threshold)
-			end
-		end
-		
-		RK.mobj.SearchForPlayersInRadius(mo, 512*FRACUNIT, RK.cons.Arrows.value)
-		
-		if mo.target and mo.target.valid
-		and mo.target.player and mo.target.player.valid
-		and not splitscreen
-		and (mo.target.player == players[#consoleplayer]) then
-			local closestmo = RK.mobj.look4ClosestMo(mo, 512*FRACUNIT, MT_ROLLOUTROCK)
-			if closestmo then
-				RK.mobj.spawnMobjPercent(closestmo)
 			end
 		end
     end
