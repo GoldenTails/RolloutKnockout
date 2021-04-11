@@ -371,6 +371,26 @@ addHook("MobjCollide", function(thing, tmthing)
 			thing.bumpcount = $ + 1
 			thing.bumpcounttics = TICRATE/2
 		end
+		
+		if thing.target and thing.target.valid
+		and thing.target.player and thing.target.player.valid then
+			local p = thing.target.player
+			
+			-- Respawn failsafe
+			if p.ingametics and (p.ingametics < 2*TICRATE) -- Player has been in-game for less than 2 seconds
+			and thing.bumpcount and (thing.bumpcount > 15) -- And the bumpcount greater than 15 bumps?
+				p.playerstate = PST_REBORN -- respawn
+			elseif thing.bumpcount and (thing.bumpcount > TICRATE) -- Bumpcount is greater than 70 bumps
+				local aang = R_PointToAngle2(thing.x, thing.y, tmthing.x, tmthing.y) -- Get the adjusted angle
+				--p.playerstate = PST_REBORN -- Hack respawn
+				/*P_TeleportMove(thing, thing.x - FixedMul(cos(aang), thing.radius),
+										thing.y - FixedMul(sin(aang), thing.radius), 
+										thing.z)*/
+				P_TeleportMove(tmthing, tmthing.x - FixedMul(cos(aang+ANGLE_180), tmthing.radius),
+										tmthing.y - FixedMul(sin(aang+ANGLE_180), tmthing.radius), 
+										tmthing.z)
+			end
+		end
 	end
 end, MT_ROLLOUTROCK)
 

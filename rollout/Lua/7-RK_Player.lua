@@ -10,25 +10,6 @@
 
 RK.plyr = {}
 
-RK.plyr.countInGamePlayers = function()
-	local playeringame = 0
-	for p in players.iterate
-		if p.spectator continue end -- We're a spectator. Skip.
-		if not p.mo continue end -- Not a mo object. Skip.
-		if p.bot continue end  -- Player is a bot. Skip.
-		playeringame = $ + 1
-	end
-	return playeringame
-end
-
-RK.plyr.countTotalPlayers = function()
-	local totalplayers = 0
-	for p in players.iterate
-		totalplayers = $ + 1
-	end
-	return totalplayers	
-end
-
 RK.plyr.deathThink1 = function(p)
 	if not p or not p.valid then return end
 	if not p.mo or not p.mo.valid then return end
@@ -266,17 +247,8 @@ addHook("PlayerThink", function(p)
 	if G_IsRolloutGametype() then
 		if p and p.valid
 		and p.mo and p.mo.valid then
-			local mo = p.mo
-
-			if p.mo.rock and p.mo.rock.valid
-			and p.playerstate ~= PST_DEAD then
+			if (p.playerstate ~= PST_DEAD) then
 				if (p.playerstate == PST_LIVE) then p.ingametics = $ + 1 end
-				
-				-- Respawn failsafe
-				if (p.ingametics < 2*TICRATE)
-				and p.mo.rock.bumpcount and (p.mo.rock.bumpcount > 15) then
-					p.playerstate = PST_REBORN
-				end
 			elseif (p.playerstate == PST_DEAD) then
 				RK.plyr.deathThink1(p)
 			end

@@ -68,6 +68,7 @@ RK.hud.game = function(v, p)
 	if not p or not p.valid then return end
 	
 	if G_IsRolloutGametype() then
+		
 		local vsize = { x = (v.width()), y = (v.height()) }
 		local rkhud = { x = hudinfo[HUD_LIVES].x,
 						y = hudinfo[HUD_LIVES].y,
@@ -103,7 +104,7 @@ RK.hud.game = function(v, p)
 					vflags, pcolor)
 		
 		-- Stock icon
-		if (gametype == GT_ROLLOUT_STOCK) and (p.lives > 0)
+		if G_GametypeUsesLives() and (p.lives > 0)
 			if (p.lives < 5) -- Lives count is less than 5
 				for i = 0, p.lives-1 do
 					v.drawScaled((rkhud.x + 43 + (i*11))*FRACUNIT, 
@@ -157,7 +158,7 @@ RK.hud.scores = function(v)
 		-- Collect the current player userdata structures.
 		RK.ptable.u = {}
 		for p in players.iterate do
-			if (gametype == GT_ROLLOUT_STOCK) then
+			if G_GametypeUsesLives() then
 				table.insert(RK.ptable.u, {p, p.lives})
 			else
 				table.insert(RK.ptable.u, {p, p.score})
@@ -181,7 +182,7 @@ RK.hud.scores = function(v)
 			v.drawString(offset.x, vsize.y/12, "#", vflags|V_YELLOWMAP)
 			v.drawString((offset.x + 136), vsize.y/12, "Name", vflags|V_YELLOWMAP)
 			v.drawString(7*offset.x, vsize.y/12, "R. DMG", vflags|V_YELLOWMAP)
-			if (gametype == GT_ROLLOUT_STOCK) then
+			if G_GametypeUsesLives() then
 				v.drawString(10*offset.x, vsize.y/12, "Lives", vflags|V_YELLOWMAP) -- Lives count in STOCK
 			else
 				v.drawString(10*offset.x, vsize.y/12, "Score", vflags|V_YELLOWMAP) -- Score #
@@ -192,7 +193,7 @@ RK.hud.scores = function(v)
 			v.drawString(offset.xh, vsize.y/12, "#", vflags|V_YELLOWMAP, "thin")
 			v.drawString((offset.xh + 136), vsize.y/12, "Name", vflags|V_YELLOWMAP, "thin")
 			v.drawString(7*offset.xh, vsize.y/12, "R. DMG", vflags|V_YELLOWMAP, "thin")
-			if (gametype == GT_ROLLOUT_STOCK) then
+			if G_GametypeUsesLives() then
 				v.drawString(10*offset.xh, vsize.y/12, "Lives", vflags|V_YELLOWMAP, "thin")
 			else
 				v.drawString(10*offset.xh, vsize.y/12, "Score", vflags|V_YELLOWMAP, "thin")
@@ -202,7 +203,7 @@ RK.hud.scores = function(v)
 			v.drawString(offset.xh2, vsize.y/12, "#", vflags|V_YELLOWMAP, "thin")
 			v.drawString((offset.xh2 + 136), vsize.y/12, "Name", vflags|V_YELLOWMAP, "thin")
 			v.drawString(7*offset.xh + vsize.x/2, vsize.y/12, "R. DMG", vflags|V_YELLOWMAP, "thin")
-			if (gametype == GT_ROLLOUT_STOCK) then
+			if G_GametypeUsesLives() then
 				v.drawString(10*offset.xh + vsize.x/2, vsize.y/12, "Lives", vflags|V_YELLOWMAP, "thin") -- Lives count in STOCK
 			else
 				v.drawString(10*offset.xh + vsize.x/2, vsize.y/12, "Score", vflags|V_YELLOWMAP, "thin") -- Score #
@@ -244,7 +245,7 @@ RK.hud.scores = function(v)
 				end
 
 				-- Gametype differences
-				if (gametype == GT_ROLLOUT_STOCK) then
+				if G_GametypeUsesLives() then
 					v.drawString(11*offset.x + offset.xh, vsize.y/6 + (i-1)*70, p.lives, vflags, "right") -- Lives count in STOCK
 				else
 					v.drawString(11*offset.x + offset.xh, vsize.y/6 + (i-1)*70, p.score, vflags, "right") -- Score #
@@ -272,7 +273,7 @@ RK.hud.scores = function(v)
 					end
 
 					-- Gametype differences
-					if (gametype == GT_ROLLOUT_STOCK) then
+					if G_GametypeUsesLives() then
 						v.drawString(11*offset.xh + offset.x/4, vsize.y/6 + (i-1)*70, p.lives, vflags, "thin-right") -- Lives count in STOCK
 					else
 						v.drawString(11*offset.xh + offset.x/4, vsize.y/6 + (i-1)*70, p.score, vflags, "thin-right") -- Score #
@@ -298,8 +299,8 @@ RK.hud.scores = function(v)
 					end
 					
 					-- Gametype differences
-					if (gametype == GT_ROLLOUTSTOCK) then
-						v.drawString(11*offset.xh + offset.x/4 + vsize.x/2, vsize.y/6 + (i-9)*70, p.score, vflags, "thin-right") -- Score #-- Lives count in STOCK
+					if G_GametypeUsesLives() then
+						v.drawString(11*offset.xh + offset.x/4 + vsize.x/2, vsize.y/6 + (i-9)*70, p.lives, vflags, "thin-right") -- Lives count in STOCK
 					else
 						v.drawString(11*offset.xh + offset.x/4 + vsize.x/2, vsize.y/6 + (i-9)*70, p.score, vflags, "thin-right") -- Score #
 					end
@@ -312,41 +313,6 @@ RK.hud.scores = function(v)
 		hud.enable("rankings")
 	end
 end
-
--- HurtMsg hook to replace the default "x's tagging hand killed y" Message
-addHook("HurtMsg", function(p, i, s)
-	if G_IsRolloutGametype() then
-		if not p or not p.valid then return end
-		if not i or not i.valid then return end
-		if not s or not s.valid then return end
-		
-		if (i.type == s.type) and i.player and s.player then
-			print(s.player.name.." killed "..p.name..".")
-			return true
-		else
-			return false
-		end
-	else
-		return false
-	end
-end, MT_PLAYER)
-
-addHook("TeamSwitch", function(p, team, fromspectators)
-	if G_IsRolloutGametype() and G_GametypeUsesLives() then
-		if p and p.valid then
-			-- Cheeky check for those that die, become a spectator, and attempt to re-enter the game...
-			if fromspectators
-			and p.lives <= 0 then
-				CONS_Printf(p, "You're out of lives! Please wait to enter the next game!")
-				return false
-			elseif not fromspectators -- Although, becoming a spectator deducts a life by default...
-			and (p.playerstate ~= PST_DEAD) then -- Not already dead?
-				p.lives = $ + 1 -- Add one to be generous.
-				return true
-			end
-		end
-	end
-end)
 
 hud.add(RK.hud.game, "game")
 hud.add(RK.hud.scores, "scores")
