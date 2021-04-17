@@ -1,5 +1,5 @@
 --
--- RK_Mobj.Lua
+-- RK_Player.Lua
 -- Resource file Player-specific functions and behaviors
 -- 
 -- 

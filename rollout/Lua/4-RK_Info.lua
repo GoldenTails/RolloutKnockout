@@ -2,6 +2,7 @@
 -- RK_Info.Lua
 -- Resource file for Mobj objects, states and sounds
 -- 
+--
 -- Flame
 --
 -- Date: 3-21-21
@@ -40,7 +41,7 @@ end
 freeslot("SPR_RXPL")
 for i = 0, 19 do
 	freeslot("S_RXPL"..i+1)
-	states[S_RXPL1+i] = {SPR_RXPL, i|FF_FULLBRIGHT, 2, nil, 0, 0, S_RXPL1+(i+1) or S_NULL}
+	states[S_RXPL1+i] = {SPR_RXPL, i|FF_FULLBRIGHT, 2, nil, 0, 0, (i<19) and S_RXPL1+(i+1) or S_NULL}
 end
 
 -- Flame
@@ -54,7 +55,7 @@ end
 freeslot("SPR_IPCT")
 for i = 0, 3 do
 	freeslot("S_IMPACT"..i+1)
-	states[S_IMPACT1+i] = {SPR_IPCT, i|FF_FULLBRIGHT, 4, nil, 0, 0, S_IMPACT1+(i+1) or S_NULL}
+	states[S_IMPACT1+i] = {SPR_IPCT, i|FF_FULLBRIGHT, 4, nil, 0, 0, (i<3) and S_IMPACT1+(i+1) or S_NULL}
 end
 
 -- Arrows!

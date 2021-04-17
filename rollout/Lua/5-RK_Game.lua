@@ -1,7 +1,8 @@
 --
 -- RK_Game.Lua
 -- Resource file for some gamestate, and gameplay functions.
--- 
+--
+--
 -- Flame
 --
 -- Date: 3-21-21

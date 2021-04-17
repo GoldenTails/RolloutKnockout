@@ -1,5 +1,5 @@
 --
--- RK_Mobj.Lua
+-- RK_Cons.Lua
 -- Resource file Console commands and related functions.
 -- 
 -- 

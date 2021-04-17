@@ -68,7 +68,6 @@ RK.hud.game = function(v, p)
 	if not p or not p.valid then return end
 	
 	if G_IsRolloutGametype() then
-		
 		local vsize = { x = (v.width()), y = (v.height()) }
 		local rkhud = { x = hudinfo[HUD_LIVES].x,
 						y = hudinfo[HUD_LIVES].y,

@@ -2,10 +2,12 @@
 -- RK_Globals.Lua
 -- Resource file for tables and functionsto be used throughout the Lua code.
 -- 
+--
 -- Flame
 --
 -- Date: 3-21-21
 --
+
 rawset(_G, "RK", {}) -- Start the Rollout Knockout Global Table
 rawset(_G, "INFLIVES", 0x7F) -- From SRB2 Source
 
