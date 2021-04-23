@@ -38,7 +38,7 @@ addHook("ThinkFrame", do
 		RK.game.exiting.ticker = $ + 1
 		RK.game.exiting.endtime = 3*TICRATE
 		RK.game.exiting.var = true
-		print("We are exiting now!")
+		--print("We are exiting now!")
 	end
 end)
 

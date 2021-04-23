@@ -58,17 +58,19 @@ RK.mobj.spawnArrow = function(mo, target, dist)
 	
 	local arw = P_SpawnMobj(mo.x, mo.y, mo.z + mo.height/2, MT_DUMMY)
 	arw.state = S_RKAW1
-	arw.angle = R_PointToAngle2(mo.x, mo.y, target.x, target.y) + ANGLE_180
+	arw.angle = R_PointToAngle2(mo.x, mo.y, target.x, target.y)
 	arw.target = mo
 	arw.color = target.color or SKINCOLOR_GREEN -- Opponent's color
 	-- Fancy maths. Ensure your papersprite angle points towards your opponent.
 	local ft = FixedAngle((leveltime%45)*(8*FRACUNIT))
-	P_TeleportMove(arw, mo.x + FixedMul(cos(arw.angle-ANGLE_180), 3*mo.radius + FixedMul(sin(ft), 4*FRACUNIT)),
-						mo.y + FixedMul(sin(arw.angle-ANGLE_180), 3*mo.radius + FixedMul(sin(ft), 4*FRACUNIT)),
+	P_TeleportMove(arw, mo.x + FixedMul(cos(arw.angle), 3*mo.radius + FixedMul(sin(ft), 4*FRACUNIT)),
+						mo.y + FixedMul(sin(arw.angle), 3*mo.radius + FixedMul(sin(ft), 4*FRACUNIT)),
 						mo.z + mo.height/2)
 
 	-- Some more fancy maths. Grow/shrink according to your target's distance
-	arw.scale = FixedDiv(FixedMul(FRACUNIT, dist), R_PointToDist2(mo.x, mo.y, target.x, target.y))/2
+	local tdist, zdiff = R_PointToDist2(mo.x, mo.y, target.x, target.y), (target.z - mo.z)
+	arw.scale = FixedDiv(FixedMul(FRACUNIT, dist), tdist)/2
+	--arw.rollangle = R_PointToAngle2(0, 0, tdist, zdiff)
 end
 
 RK.mobj.spawnSmoke = function(mo, freq)
@@ -179,7 +181,7 @@ RK.mobj.look4ClosestMo = function(mo, dist, mtype)
 		if (m.health <= 0) then continue end -- Dead
 		if (m.flags & MF_NOBLOCKMAP) or (m.flags & MF_SCENERY) then continue end -- Not Part of the blockmap. Ignore
 		
-		local idist = FixedHypot(m.x - mo.x, m.y - mo.y) -- Do not care about 'Z'
+		local idist = FixedHypot(FixedHypot(m.x - mo.x, m.y - mo.y), 2*(m.z - mo.z))
 		if (idist > dist) then continue end -- Ignore objects outside of 'dist' range.
 		
 		if (idist < closestdist) then -- There's a mobj that's closer?
