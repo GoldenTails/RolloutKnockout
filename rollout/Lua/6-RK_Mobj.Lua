@@ -69,8 +69,15 @@ RK.mobj.spawnArrow = function(mo, target, dist)
 
 	-- Some more fancy maths. Grow/shrink according to your target's distance
 	local tdist, zdiff = R_PointToDist2(mo.x, mo.y, target.x, target.y), (target.z - mo.z)
+	local zaim = R_PointToAngle2(0, 0, tdist, zdiff) -- Use that distance to 'aim' towards your target
+	local camangle = R_PointToAngle(mo.x, mo.y)
+	
+	-- Grow/shrink
 	arw.scale = FixedDiv(FixedMul(FRACUNIT, dist), tdist)/2
-	--arw.rollangle = R_PointToAngle2(0, 0, tdist, zdiff)
+	
+	-- Rollangle
+	if ((camangle - arw.angle) < 0) then zaim = InvAngle($) end
+	arw.rollangle = zaim
 end
 
 RK.mobj.spawnSmoke = function(mo, freq)
