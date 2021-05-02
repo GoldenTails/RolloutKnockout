@@ -10,7 +10,7 @@
 
 RK.game = {}
 RK.game.exiting = {}
-RK.game.exiting = { var = 0, ticker = 0, endtime = 0 }
+RK.game.exiting = { var = 0, ticker = 0 }
 
 RK.game.countInGamePlayers = function()
 	local playeringame = 0
@@ -33,12 +33,31 @@ RK.game.countTotalPlayers = function()
 end
 
 addHook("ThinkFrame", do
-	if (RK.game.countTotalPlayers() > 1)
-	and (RK.game.countInGamePlayers() == 1) then
-		RK.game.exiting.ticker = $ + 1
-		RK.game.exiting.endtime = 3*TICRATE
-		RK.game.exiting.var = true
-		--print("We are exiting now!")
+	if G_IsRolloutGametype() then
+		if not RK.game.exiting.var then RK.game.exiting.ticker = 0 end
+		
+		if (RK.game.countTotalPlayers() > 1) -- Number of total players is > 1
+		and (RK.game.countInGamePlayers() == 1) -- And the number of in-game players are 1
+		or RK.game.exiting.var then -- Or if we are already "exiting"...
+			RK.game.exiting.ticker = $ + 1
+			RK.game.exiting.var = true
+			if (RK.game.exiting.ticker == 1) then -- Music fade
+				S_FadeOutStopMusic(MUSICRATE)
+			elseif (RK.game.exiting.ticker >= TICRATE) then -- Also extend the p.exiting timer by another second
+				for p in players.iterate do
+					if p.exiting then continue end -- Already exiting? Skip
+					p.exiting = 3*TICRATE-1
+				end
+			end
+		end
+	end
+end)
+
+-- Reset the exiting variables.
+addHook("MapChange", function(mapnum) -- This goes unused
+	if RK.game.exiting.var or RK.game.exiting.ticker then
+		RK.game.exiting.var = false
+		RK.game.exiting.ticker = 0
 	end
 end)
 

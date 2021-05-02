@@ -38,13 +38,19 @@ for i = 0, 4 do
 	states[S_FRAG1+i]	= {SPR_SUMN, (i+1)|FF_FULLBRIGHT|trans[i+1], 3, nil, 0, 0, i<3 and S_FRAG2+i or S_NULL}
 end
 
+freeslot("SPR_HURT")
+for i = 0, 3
+	freeslot("S_HURT"..i+1)
+	states[S_HURT1+i] = {SPR_HURT, i|FF_FULLBRIGHT, 3, nil, 0, 0, (i<3) and S_HURT1+(i+1) or S_NULL}
+end
+
+-- Flame
 freeslot("SPR_RXPL")
 for i = 0, 19 do
 	freeslot("S_RXPL"..i+1)
 	states[S_RXPL1+i] = {SPR_RXPL, i|FF_FULLBRIGHT, 2, nil, 0, 0, (i<19) and S_RXPL1+(i+1) or S_NULL}
 end
 
--- Flame
 freeslot("SPR_NMBR")
 for i = 1, 11 do -- 0 - 9 (10) and Percent
 	freeslot("S_NMBR"..(i-1))
@@ -68,4 +74,7 @@ freeslot("sfx_pointu")
 sfxinfo[sfx_pointu].caption = "Point up!"
 freeslot("sfx_pplode")
 sfxinfo[sfx_pplode].caption = "Player Explode"
+freeslot("sfx_wwipe")
+freeslot("sfx_whit")
+freeslot("sfx_whitf")
  

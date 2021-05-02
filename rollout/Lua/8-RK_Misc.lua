@@ -9,32 +9,11 @@
 --
 
 RK.hud = {}
+RK.hud.obj = {} -- Hud Object container
+RK.hud.obj.t = {} -- Hud object table
 RK.ptable = {} -- Player table container
 RK.ptable.u = {} -- Player table (Unsorted)
 RK.ptable.s = {} -- Player table (Sorted)
-
-rawset(_G, "spairs", function(t, order)
-    -- collect the keys
-    local keys = {}
-    for k in pairs(t) do keys[#keys+1] = k end
-
-    -- if order function given, sort by it by passing the table and keys a, b,
-    -- otherwise just sort the keys 
-    if order then
-        table.sort(keys, function(a,b) return order(t, a, b) end)
-    else
-        table.sort(keys)
-    end
-
-    -- return the iterator function
-    local i = 0
-    return function()
-        i = i + 1
-        if keys[i] then
-            return keys[i], t[keys[i]]
-        end
-    end
-end)
 
 RK.hud.toggle = function()
 	if G_IsRolloutGametype() then
@@ -62,13 +41,107 @@ RK.hud.toggle = function()
 	end
 end
 
+RK.hud.obj.Think = function()
+	for k, hobj in ipairs(RK.hud.obj.t) do
+		if hobj.fuse and (hobj.fuse > 0) then
+			hobj.fuse = $ - 1
+			if (hobj.fuse == 1) then table.remove(RK.hud.obj.t, k) end
+		end
+	end
+end
+
+RK.hud.gameSET = function(v, p, ticker)
+	local vsize = { x = v.width()/v.dupx(), y = v.height()/v.dupy() }
+	local vidflags = V_SNAPTOTOP|V_SNAPTOLEFT
+	local ghzpatch = v.cachePatch("HUDGHZW")
+	local txtgame, txtset = v.cachePatch("HUDGAME"), v.cachePatch("HUDSET")
+	
+	if (ticker == 2) then S_StartSound(nil, sfx_wwipe, p) end
+	
+	-- Black bars
+	v.drawFill(0,0,vsize.x, (ticker*4 < vsize.y/5) and ticker*4 or vsize.y/5, 31|vidflags)
+	v.drawFill(0,vsize.y - ((ticker*4 < vsize.y/5) and ticker*4 or vsize.y/5),vsize.x, vsize.y/5, 31|vidflags)
+	
+	-- White line
+	v.drawFill(0,vsize.y/2 - (vsize.y/ticker)/2,vsize.x, vsize.y/ticker, vidflags)
+	
+	-- Text shake at >60 tics
+	if (ticker > 50) then
+		v.drawScaled((v.RandomRange(-1, 1) + vsize.x/2 - 17*ghzpatch.width/12)*FRACUNIT, 
+					(v.RandomRange(-1, 1) + ghzpatch.height/4 + vsize.y/3)*FRACUNIT,
+					FRACUNIT, txtgame, vidflags)
+		v.drawScaled((v.RandomRange(-1, 1) + vsize.x/2 + ghzpatch.width/4)*FRACUNIT, 
+					(v.RandomRange(-1, 1) + ghzpatch.height/4 + vsize.y/3)*FRACUNIT,
+					FRACUNIT, txtset, vidflags)
+	else -- Otherwise the text is covered by GFZFLR01
+		v.drawScaled((vsize.x/2 - 17*ghzpatch.width/12)*FRACUNIT, 
+					(ghzpatch.height/4 + vsize.y/3)*FRACUNIT,
+					FRACUNIT, txtgame, vidflags)
+		v.drawScaled((vsize.x/2 + ghzpatch.width/4)*FRACUNIT, 
+					(ghzpatch.height/4 + vsize.y/3)*FRACUNIT,
+					FRACUNIT, txtset, vidflags)
+
+		for i = -2, 3, 1 do -- Width
+			for j = 1, 2 do -- Height
+				if (ticker > 20) then
+					v.drawScaled((v.RandomRange(-1, 1) + vsize.x/2 + ((i-1)*ghzpatch.width/2))*FRACUNIT, 
+								(v.RandomRange(-1, 1) + vsize.y/3 + ((j-1)*ghzpatch.height/2))*FRACUNIT, 
+								FRACUNIT/2, ghzpatch, vidflags)
+				else
+					v.drawScaled((vsize.x/2 + ((i-1)*ghzpatch.width/2))*FRACUNIT, 
+								(vsize.y/3 + ((j-1)*ghzpatch.height/2))*FRACUNIT, 
+								FRACUNIT/2, ghzpatch, vidflags)
+				end
+			end
+		end
+	end
+
+	-- Let's get real fancy with this...
+	if (ticker == 20)
+	or (ticker == 26)
+	or (ticker == 32) 
+	or (ticker == 38) 
+	or (ticker == 44) then
+		table.insert(RK.hud.obj.t, { x = vsize.x/2 + v.RandomRange((0-3)*ghzpatch.width/2, 3*ghzpatch.width/2),
+						y = vsize.y/3 + v.RandomRange(0, ghzpatch.height),
+						patch = { v.getSpritePatch(SPR_HURT, A, 0),
+								v.getSpritePatch(SPR_HURT, B, 0),
+								v.getSpritePatch(SPR_HURT, C, 0),
+								v.getSpritePatch(SPR_HURT, D, 0)
+								},
+						f = vidflags,
+						c = v.getColormap(-1, p.skincolor),
+						fuse = 12})
+		S_StartSound(nil, sfx_whit, p) -- Since our function triggers right after, no harm in calling a sound function here.
+	end
+	
+	RK.hud.obj.Think()
+	if (#RK.hud.obj.t > 0) then
+		for _, hobj in ipairs(RK.hud.obj.t) do
+			v.draw(hobj.x,hobj.y, hobj.patch[4-(hobj.fuse/3)], hobj.f, hobj.c)
+		end
+	end
+	
+	if (ticker > 50) then
+		-- TODO: Something cooler other than flashing the screen white?
+		-- Maybe Break this "wall" into pieces at some point.
+		if (ticker == 51) then S_StartSound(nil, sfx_whitf, p) end
+		if (ticker < 60) then
+			v.fadeScreen(1, 60-ticker)
+		end
+	end
+	
+	if (ticker < 10) then v.fadeScreen(1, 10-ticker) end
+end
+
 RK.hud.game = function(v, p)
 	RK.hud.toggle()
 	if not v then return end
 	if not p or not p.valid then return end
-	
-	if G_IsRolloutGametype() then
-		local vsize = { x = (v.width()), y = (v.height()) }
+	if not G_IsRolloutGametype() then return end
+
+	if not RK.game.exiting.var then
+		local vsize = { x = v.width(), y = v.height() }
 		local rkhud = { x = hudinfo[HUD_LIVES].x,
 						y = hudinfo[HUD_LIVES].y,
 						full = v.cachePatch("RKLA75"),
@@ -136,11 +209,15 @@ RK.hud.game = function(v, p)
 		end
 		v.drawString(rkhud.x + 60, rkhud.y - 4, "%", vflags, "left") -- "Percent" character
 		v.drawString(rkhud.x + 37, rkhud.y + 7, pname, vflags|V_ALLOWLOWERCASE, "small-thin") -- Player Name
+	else
+		RK.hud.gameSET(v, p, RK.game.exiting.ticker)
 	end
 end
 
 RK.hud.scores = function(v)
 	if not v then return end
+	if RK.game.exiting.var then return end
+	
 	if G_IsRolloutGametype() then
 		hud.disable("rankings")
 		
@@ -155,7 +232,7 @@ RK.hud.scores = function(v)
 		v.drawFill(20, vsize.y/8, vsize.x-40, 4, vflags|SKINCOLOR_WHITE)
 		
 		-- Collect the current player userdata structures.
-		RK.ptable.u = {}
+ 		RK.ptable.u = {}
 		for p in players.iterate do
 			if G_GametypeUsesLives() then
 				table.insert(RK.ptable.u, {p, p.lives})

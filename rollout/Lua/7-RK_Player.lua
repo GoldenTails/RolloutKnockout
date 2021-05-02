@@ -247,6 +247,7 @@ addHook("PlayerThink", function(p)
 	if G_IsRolloutGametype() then
 		if p and p.valid
 		and p.mo and p.mo.valid then
+			local cmd = p.cmd
 			if (p.playerstate ~= PST_DEAD) then
 				if (p.playerstate == PST_LIVE) then p.ingametics = $ + 1 end
 			elseif (p.playerstate == PST_DEAD) then
