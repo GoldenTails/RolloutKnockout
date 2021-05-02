@@ -16,35 +16,38 @@ RK.plyr.deathThink1 = function(p)
 	
 	local mo = p.mo -- Simplify
 	if (mo.fuse > 1) 
-	and not (leveltime%7) then
+	and not (leveltime%7) then -- Buildup to explosion.
 			local r = mo.radius>>FRACBITS
 			local xpld = P_SpawnMobj(mo.x + (P_RandomRange(-r, r)<<FRACBITS),
 							mo.y + (P_RandomRange(-r, r)<<FRACBITS),
 							mo.z + (P_RandomKey(mo.height>>FRACBITS)<<FRACBITS),
 							MT_SONIC3KBOSSEXPLODE)
 			S_StartSound(xpld, sfx_s3kb4)
-	elseif (mo.fuse == 1) then
+	elseif (mo.fuse == 1) then -- Explode!
 		mo.momx = 0
 		mo.momy = 0
 		mo.momz = 0
-		local xpld = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMY)
+		local xpld = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMY) -- Spawn an object.
 		xpld.state = S_RXPL2
 		xpld.scale = 2*FRACUNIT
+		S_StartSound(mo, sfx_pplode) -- Play a sound.
+		P_StartQuake(35*FRACUNIT, 5) -- Shake the screen.
+		
+		-- We're already doing a number of flashy effects while exiting. 
+		-- Don't process anything else.
+		if RK.game.exiting.var then return end
+		
+		-- Flash the screen
 		for px in players.iterate do
-			if (px == p) then continue end
-			if px.spectator then continue end
-			if not px.mo then continue end
+			if (px == p) then continue end -- Us? Skip.
+			if px.spectator then continue end -- Spectator? Skip
+			if not px.mo then continue end -- Mo doesn't exist? Skip
 			local idist = FixedHypot(FixedHypot(px.mo.x - p.mo.x, px.mo.y - p.mo.y), px.mo.z - p.mo.z)
 			if (idist < 512*FRACUNIT) then 
 				P_FlashPal(px, 1, 3)
 			end
 		end
 		P_FlashPal(p, 1, 3)
-		--local dust = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMY)
-		--A_Boss5BombExplode(dust, MT_TNTDUST)
-		
-		S_StartSound(mo, sfx_pplode)
-		P_StartQuake(35*FRACUNIT, 5)
 	end
 end
 
