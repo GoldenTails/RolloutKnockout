@@ -24,12 +24,23 @@ RK.game.countInGamePlayers = function()
 	return playeringame
 end
 
+RK.game.countTotalTeamPlayers = function(p) -- p 'host' needed too pass variable
+	local totalteamplayers = 0
+	for pt in players.iterate
+		if pt.spectator then continue end -- Spectator? Skip
+		if pt.bot then continue end  -- Player is a bot. Skip.
+		if G_GametypeHasTeams() and (p.ctfteam ~= pt.ctfteam) then continue end -- On our team? Skip.
+		totalteamplayers = $ + 1
+	end
+	return totalteamplayers
+end
+
 RK.game.countTotalPlayers = function()
 	local totalplayers = 0
 	for p in players.iterate
 		totalplayers = $ + 1
 	end
-	return totalplayers	
+	return totalplayers
 end
 
 addHook("ThinkFrame", do

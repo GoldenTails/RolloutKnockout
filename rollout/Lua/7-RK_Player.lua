@@ -28,10 +28,10 @@ RK.plyr.deathThink1 = function(p)
 		mo.momy = 0
 		mo.momz = 0
 		local xpld = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMY) -- Spawn an object.
-		xpld.state = S_RXPL2
+		xpld.state = S_RXPL1
 		xpld.scale = 2*FRACUNIT
 		S_StartSound(mo, sfx_pplode) -- Play a sound.
-		P_StartQuake(35*FRACUNIT, 5) -- Shake the screen.
+		P_StartQuake(40*FRACUNIT, 5) -- Shake the screen.
 		
 		-- We're already doing a number of flashy effects while exiting. 
 		-- Don't process anything else.

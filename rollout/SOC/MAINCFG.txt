@@ -43,8 +43,17 @@ Music = BHZ
 TypeOfLevel = ROLLOUT
 SkyNum = 99
 Subtitle = By So2ro
-NextLevel = R2
+NextLevel = RM
 SelectHeading = Small Maps
+
+Level RM
+LevelName = Desert Dash
+Subtitle = By Flame
+Music = VSALT
+TypeOfLevel = ROLLOUT
+Skynum = 13
+SelectHeading = Small Maps
+NextLevel = R2
 
 #Level S1
 #Levelname = Grassy Floats

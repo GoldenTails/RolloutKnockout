@@ -97,11 +97,9 @@ RK.hud.gameSET = function(v, p, ticker)
 	end
 
 	-- Let's get real fancy with this...
-	if (ticker == 20)
-	or (ticker == 26)
-	or (ticker == 32) 
-	or (ticker == 38) 
-	or (ticker == 44) then
+	if (ticker >= 20)
+	and (ticker <= 44)
+	and not ((ticker - 20)%6) then
 		table.insert(RK.hud.obj.t, { x = vsize.x/2 + v.RandomRange((0-3)*ghzpatch.width/2, 3*ghzpatch.width/2),
 						y = vsize.y/3 + v.RandomRange(0, ghzpatch.height),
 						patch = { v.getSpritePatch(SPR_HURT, A, 0),
