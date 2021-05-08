@@ -51,9 +51,10 @@ RK.hud.obj.Think = function()
 end
 
 RK.hud.gameSET = function(v, p, ticker)
-	local vsize = { x = v.width()/v.dupx(), y = v.height()/v.dupy() }
-	local vidflags = V_SNAPTOTOP|V_SNAPTOLEFT
 	local ghzpatch = v.cachePatch("HUDGHZW")
+	local vsize = { x = v.width()/v.dupx(), y = v.height()/v.dupy() }
+	local voffsset = { x = 0, y = vsize.y/2 - ghzpatch.height/2 }
+	local vidflags = V_SNAPTOTOP|V_SNAPTOLEFT
 	local txtgame, txtset = v.cachePatch("HUDGAME"), v.cachePatch("HUDSET")
 	
 	if (ticker == 2) then S_StartSound(nil, sfx_wwipe, p) end
@@ -63,33 +64,35 @@ RK.hud.gameSET = function(v, p, ticker)
 	v.drawFill(0,vsize.y - ((ticker*4 < vsize.y/5) and ticker*4 or vsize.y/5),vsize.x, vsize.y/5, 31|vidflags)
 	
 	-- White line
-	v.drawFill(0,vsize.y/2 - (vsize.y/ticker)/2,vsize.x, vsize.y/ticker, vidflags)
+	v.drawFill(0,vsize.y/2 - (max(4, vsize.y/ticker))/2, vsize.x, max(4, vsize.y/ticker), vidflags)
 	
 	-- Text shake at >60 tics
 	if (ticker > 50) then
 		v.drawScaled((v.RandomRange(-1, 1) + vsize.x/2 - 17*ghzpatch.width/12)*FRACUNIT, 
-					(v.RandomRange(-1, 1) + ghzpatch.height/4 + vsize.y/3)*FRACUNIT,
+					(v.RandomRange(-1, 1) + ghzpatch.height/4 + voffsset.y)*FRACUNIT,
 					FRACUNIT, txtgame, vidflags)
 		v.drawScaled((v.RandomRange(-1, 1) + vsize.x/2 + ghzpatch.width/4)*FRACUNIT, 
-					(v.RandomRange(-1, 1) + ghzpatch.height/4 + vsize.y/3)*FRACUNIT,
+					(v.RandomRange(-1, 1) + ghzpatch.height/4 + voffsset.y)*FRACUNIT,
 					FRACUNIT, txtset, vidflags)
 	else -- Otherwise the text is covered by GFZFLR01
 		v.drawScaled((vsize.x/2 - 17*ghzpatch.width/12)*FRACUNIT, 
-					(ghzpatch.height/4 + vsize.y/3)*FRACUNIT,
+					(ghzpatch.height/4 + voffsset.y)*FRACUNIT,
 					FRACUNIT, txtgame, vidflags)
 		v.drawScaled((vsize.x/2 + ghzpatch.width/4)*FRACUNIT, 
-					(ghzpatch.height/4 + vsize.y/3)*FRACUNIT,
+					(ghzpatch.height/4 + voffsset.y)*FRACUNIT,
 					FRACUNIT, txtset, vidflags)
 
 		for i = -2, 3, 1 do -- Width
 			for j = 1, 2 do -- Height
 				if (ticker > 20) then
 					v.drawScaled((v.RandomRange(-1, 1) + vsize.x/2 + ((i-1)*ghzpatch.width/2))*FRACUNIT, 
-								(v.RandomRange(-1, 1) + vsize.y/3 + ((j-1)*ghzpatch.height/2))*FRACUNIT, 
+								--(v.RandomRange(-1, 1) + vsize.y/3 + ((j-1)*ghzpatch.height/2))*FRACUNIT, 
+								(v.RandomRange(-1, 1) + voffsset.y + ((j-1)*ghzpatch.height/2))*FRACUNIT, 
 								FRACUNIT/2, ghzpatch, vidflags)
 				else
 					v.drawScaled((vsize.x/2 + ((i-1)*ghzpatch.width/2))*FRACUNIT, 
-								(vsize.y/3 + ((j-1)*ghzpatch.height/2))*FRACUNIT, 
+								--(vsize.y/3 + ((j-1)*ghzpatch.height/2))*FRACUNIT, 
+								(voffsset.y + ((j-1)*ghzpatch.height/2))*FRACUNIT, 
 								FRACUNIT/2, ghzpatch, vidflags)
 				end
 			end
@@ -101,7 +104,8 @@ RK.hud.gameSET = function(v, p, ticker)
 	and (ticker <= 44)
 	and not ((ticker - 20)%6) then
 		table.insert(RK.hud.obj.t, { x = vsize.x/2 + v.RandomRange((0-3)*ghzpatch.width/2, 3*ghzpatch.width/2),
-						y = vsize.y/3 + v.RandomRange(0, ghzpatch.height),
+						--y = vsize.y/3 + v.RandomRange(0, ghzpatch.height),
+						y = voffsset.y + v.RandomRange(0, ghzpatch.height),
 						patch = { v.getSpritePatch(SPR_HURT, A, 0),
 								v.getSpritePatch(SPR_HURT, B, 0),
 								v.getSpritePatch(SPR_HURT, C, 0),
