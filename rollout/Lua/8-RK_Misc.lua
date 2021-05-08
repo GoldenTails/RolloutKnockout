@@ -108,7 +108,7 @@ RK.hud.gameSET = function(v, p, ticker)
 								v.getSpritePatch(SPR_HURT, D, 0)
 								},
 						f = vidflags,
-						c = v.getColormap(-1, p.skincolor),
+						c = v.getColormap(TC_DEFAULT, p.skincolor),
 						fuse = 12})
 		S_StartSound(nil, sfx_whit, p) -- Since our function triggers right after, no harm in calling a sound function here.
 	end
@@ -153,7 +153,7 @@ RK.hud.game = function(v, p)
 		local mo = p.mo or p.realmo
 		if not mo then return end -- Stop here if `mo` is not found
 		local pface, pface2 = v.getSprite2Patch(mo.skin, SPR2_SIGN, 0, 0), v.getSprite2Patch(mo.skin, SPR2_LIFE, 0, 0) -- Get this player's icon!
-		local pcolor = v.getColormap(-1, p.skincolor)
+		local pcolor = v.getColormap(TC_DEFAULT, p.skincolor)
 		
 		-- Trim the characters to a Max of 8 characters.
 		if pname and string.len(pname) >= 8
@@ -291,7 +291,7 @@ RK.hud.scores = function(v)
 			local mo = p.mo or p.realmo
 			local pname = p.name
 			local pface = v.getSprite2Patch(mo.skin, SPR2_XTRA, 0, 0) -- Get this player's icon!
-			local pcolor = v.getColormap(-1, p.skincolor)
+			local pcolor = v.getColormap(TC_DEFAULT, p.skincolor)
 			
 			-- Trim the characters to a Max of 12 characters.
 			if pname and string.len(pname) >= 12
