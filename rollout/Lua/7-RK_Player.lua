@@ -88,14 +88,13 @@ end)
 
 addHook("PlayerSpawn", function(player)
 	if G_IsRolloutGametype() and (player.mo and player.mo.valid) then
-		player.powers[pw_nocontrol] = TICRATE/3
-		local rheight = mobjinfo[MT_ROLLOUTROCK].height -- Rock Height
-		P_TeleportMove(player.mo, player.mo.x, player.mo.y, player.mo.z + rheight + 5*FRACUNIT) -- Offset to be above the rock slightly
 		player.ingametics = 0
+		player.powers[pw_nocontrol] = TICRATE/3
+		player.mo.rock = P_SpawnMobj(player.mo.x, player.mo.y, player.mo.z, MT_ROLLOUTROCK) -- Spawn rock at Player's current x/y/z.
+		if not player.mo.rock then return end -- Something has gone horribly wrong
+		P_TeleportMove(player.mo, player.mo.x, player.mo.y, player.mo.z + player.mo.rock.height) -- Place player "on" the rock
 		
-		player.mo.rock = P_SpawnMobj(player.mo.x, player.mo.y, player.mo.floorz, MT_ROLLOUTROCK) -- Spawn rock on the player's current floorz
-		
-		local rock = player.mo.rock
+		local rock = player.mo.rock -- Simplify
 		rock.target = player.mo -- Target the player that spawned you. See "MobjThinker"
 		rock.colorized = true
 		if not (mapheaderinfo[gamemap].rockfloat) then

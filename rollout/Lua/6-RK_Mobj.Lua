@@ -232,7 +232,9 @@ addHook("MobjThinker", function(mo)
 				local closestmo = RK.mobj.look4ClosestMo(mo, 512*FRACUNIT, MT_ROLLOUTROCK) -- Look for a mo that's closest to us.
 				
 				if closestmo -- Found one?
-					if (p == players[#consoleplayer]) -- Don't display for us.
+					if not consoleplayer or not consoleplayer.valid then return end -- Error checking, something has gone horribly wrong.
+					
+					if (p == consoleplayer) -- Don't display for us.
 					and not splitscreen then
 						RK.mobj.spawnMobjPercent(closestmo) -- Spawn it's percent!
 					end
