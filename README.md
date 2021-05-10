@@ -1,2 +1,2 @@
 # Rollout Knockout
-a fun gamemode i guess
+Mario Party's Bumper Ball minigame, but standalone
