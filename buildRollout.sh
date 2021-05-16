@@ -19,11 +19,13 @@ PK3_FLAGS=${PK3_FLAGS:-$PK3_FLAGS_DEF}
 PK3_VERSION=${PK3_VERSION:-$PK3_VERSION_DEF}
 PK3_NAME=${PK3_NAME:-$PK3_NAME_DEF}
 PK3_FILES=${PK3_FILES:-$PK3_FILES_DEF}
-
 FOLDER_NAME=${FOLDER_NAME:-$FOLDER_NAME_DEF}
 
-PK3_FULLNAME="$PK3_FLAGS"_"$PK3_NAME"-"$PK3_VERSION"
+if [ -z "${PK3_EXCLUDE+x}" ]; then # if no exist
+	declare -n PK3_EXCLUDE=PK3_EXCLUDE_DEF # refer to PK3_EXCLUDE_DEF
+fi
 
+PK3_FULLNAME="$PK3_FLAGS"_"$PK3_NAME"-"$PK3_VERSION"
 PK3_COMMIT=$(git rev-parse --short HEAD)
 
 if [[ "$*" == *"cleanbuilds"* ]]; then
@@ -60,11 +62,23 @@ fi
 cd $FOLDER_NAME
 #rm ../builds/$PK3_FULLNAME.pk3
 
-# grab newline-seperated files from rollout folder, seperate by newline into array $ARGS
-readarray -td$'\n' ARGS <<<"$(find)"
-# declare -p ARGS
+# grab newline-seperated files from rollout folder, seperate by newline into array $FILES
+readarray -td$'\n' FILES <<<"$(find . -type f)" # exclude directories because `zip` loves recursing through them
+# declare -p FILES
 
-zip -FSr ../builds/$PK3_FULLNAME.pk3 $ARGS
+for exclude in "${PK3_EXCLUDE[@]}"; do # iterate the exclude regex array
+	for i in "${!FILES[@]}"; do # iterate args
+		if [[ "${FILES[i]}" =~ $exclude ]]; then # if this arg matches the exclude regex
+			unset 'FILES[i]'; # unset it
+		fi
+	done
+done
+
+# it doesnt really matter if it has holes in it
+ARGSTR=$(printf "'%s' " "${FILES[@]}") # makes a string that quotes all the filenames
+
+# eval kinda sucks but i've got no other option really
+eval "zip -FSr ../builds/$PK3_FULLNAME.pk3 $ARGSTR" # zip it all up!
 
 # No syn link for now... A bit redundant
 #cd ..
