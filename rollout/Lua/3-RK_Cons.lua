@@ -30,7 +30,7 @@ cv_rklives = CV_RegisterVar({
 	flags = CV_NETVAR|CV_CALL,
 	PossibleValue = {MIN = 1, MAX = 99},
 	Func = function()
-		local serverornil = server or nil
+		local serverornil = isdedicatedserver and nil or server
 		COM_BufInsertText(serverornil, "startinglives "..cv_rklives.value)
 		--print("Player lives has been set to "..cv_rklives.value)
 		if not G_GametypeUsesLives() then return end
