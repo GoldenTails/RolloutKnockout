@@ -341,8 +341,89 @@ addHook("MobjThinker", function(mo)
 				RK.mobj.spawnSmoke(mo, threshold)
 			end
 		end
+		
+		/*-- Spawn an item box just for fun.
+		if mo.target and mo.target.valid 
+		and mo.target.player and mo.target.player.valid then
+			local cmd = mo.target.player.cmd
+			if (cmd.buttons & BT_CUSTOM1) and not mo.rkabilitytics then
+				local itembox = P_SpawnMobj(mo.x - FixedMul(cos(mo.target.angle), mo.radius*3), 
+											mo.y - FixedMul(sin(mo.target.angle), mo.radius*3), 
+											mo.z, MT_DUMMY)
+				itembox.state = S_RKITEMBOX1
+				itembox.flags = $ | (MF_SPECIAL) & ~(MF_NOCLIPTHING|MF_NOBLOCKMAP|MF_NOCLIPHEIGHT|MF_NOCLIP)
+				itembox.frame = $ & ~(FF_PAPERSPRITE)
+				itembox.color = P_RandomKey(68)
+				itembox.angle = mo.angle
+				mo.rkabilitytics = TICRATE/2
+			end
+		end*/
     end
 end, MT_ROLLOUTROCK)
+
+local ringtrans_t = {TR_TRANS20, TR_TRANS30, TR_TRANS40, TR_TRANS50, TR_TRANS60, TR_TRANS70, TR_TRANS80, TR_TRANS90}
+-- Item box object
+addHook("MobjThinker", function(mo)
+	if mo and mo.valid
+	and G_IsRolloutGametype() then
+		if (mo.state == S_RKITEMBOX1) and not mo.ring then -- Main '?' circle
+			for i = 1, 2 do
+				local fa = i*ANGLE_90
+				mo.ring = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMY) -- Spawn outer ring
+				mo.ring.state = S_RKITEMBOX2
+				mo.ring.target = mo
+				mo.ring.angle = mo.angle+fa
+			end
+		elseif (mo.state == S_RKITEMBOX2) -- Outer ring
+			if mo.target and mo.target.valid
+			and mo.target.health then
+				if (mo.target == MT_ROLLOUTROCK)
+					P_TeleportMove(mo, mo.target.x, mo.target.y, mo.target.z)
+				else
+					P_TeleportMove(mo, mo.target.x, mo.target.y, mo.target.z)
+				end
+				mo.rollangle = $ + ANGLE_11hh
+				mo.angle = $ + ANGLE_11hh/3
+				mo.color = mo.target.color or SKINCOLOR_GREEN
+			else -- Fading ring
+				local fadetimer = TICRATE/3
+				if not mo.fuse then
+					mo.fuse = fadetimer
+					mo.destscale = 4*FRACUNIT
+					mo.scalspeed = FRACUNIT/fadetimer
+				end
+				local ease = cosEase(1,9,(fadetimer)-mo.fuse,fadetimer)
+				mo.frame = B|FF_PAPERSPRITE|ringtrans_t[ease]
+			end
+		end
+	end
+end, MT_DUMMY)
+
+addHook("MobjMoveCollide", function(tmthing, thing)
+	if tmthing and tmthing.valid
+	and thing and thing.valid then
+		if (tmthing.z > (thing.z + thing.height)) -- No Z collision? Let's fix that!
+		or ((tmthing.z + tmthing.height) < thing.z) then
+			return -- Out of range
+		end
+		
+		if (thing.type == MT_DUMMY)
+		and (thing.state == S_RKITEMBOX1) then
+			for i = 1, 2
+				local fa = i*ANGLE_90
+				local itmr = P_SpawnMobj(tmthing.x, tmthing.y, tmthing.z, MT_DUMMY)
+				itmr.state = S_RKITEMBOX2
+				itmr.target = tmthing
+				itmr.angle = tmthing.angle+fa
+				itmr.scale = 3*FRACUNIT
+				itmr.destscale = FRACUNIT+(FRACUNIT/4)
+				itmr.scalespeed = FRACUNIT/(TICRATE/3)
+			end
+			P_RemoveMobj(thing)
+		end
+	end
+end, MT_ROLLOUTROCK) -- Rock vs Dummy object
+
 
 -- Score object
 addHook("MobjThinker", function(mo)
@@ -351,7 +432,7 @@ addHook("MobjThinker", function(mo)
 		if (mo.state == S_NIGHTSCORE100) then
 			mo.color = (leveltime%69) -- NICE
 			if (mo.fuse < TICRATE) then mo.flags2 = $ ^^ MF2_DONTDRAW end		
-		elseif (mo.state == S_THOK) then
+		/*elseif (mo.state == S_THOK) then
 			if (mo.threshold == 100)
 			and not (leveltime%2) then
 				mo.flags2 = $ ^^ MF2_DONTDRAW
@@ -364,7 +445,7 @@ addHook("MobjThinker", function(mo)
 					mo.extravalue1 = $ + 1
 				end
 				mo.frame = $ | (FF_TRANS10 * mo.extravalue1)
-			end
+			end*/
 		end
 	end
 end, MT_DUMMY)

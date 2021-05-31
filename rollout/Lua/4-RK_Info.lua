@@ -65,9 +65,16 @@ for i = 0, 3 do
 end
 
 -- Arrows!
-freeslot("S_RKAW1")
 freeslot("SPR_RKAW")
+freeslot("S_RKAW1")
 states[S_RKAW1] = {SPR_RKAW, A|FF_FULLBRIGHT|FF_PAPERSPRITE, 2, nil, 0, 0, S_NULL}
+
+-- Item 'boxes'
+freeslot("SPR_RKIB")
+for i = 0, 1
+	freeslot("S_RKITEMBOX"..i+1)
+	states[S_RKITEMBOX1+i] = {SPR_RKIB, i|FF_FULLBRIGHT|FF_PAPERSPRITE, -1, nil, 0, 0, S_NULL}
+end
 
 -- Sounds
 freeslot("sfx_pointu")

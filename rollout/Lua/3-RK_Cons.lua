@@ -21,3 +21,21 @@ RK.cons.Respawn = function(p)
 end
 
 COM_AddCommand("rk_respawn", RK.cons.Respawn)
+
+-- Manually set the lives in RK
+rawset(_G, "cv_rklives", {value = 3}) -- This avoids a console warning. This table gets overwritten.
+cv_rklives = CV_RegisterVar({
+	name = "rk_setlives",
+	defaultvalue = 3,
+	flags = CV_NETVAR|CV_CALL,
+	PossibleValue = {MIN = 1, MAX = 99},
+	Func = function()
+		local serverornil = server or nil
+		COM_BufInsertText(serverornil, "startinglives "..cv_rklives.value)
+		--print("Player lives has been set to "..cv_rklives.value)
+		if not G_GametypeUsesLives() then return end
+		for p in players.iterate
+			p.lives = cv_rklives.value
+		end
+	end,
+})

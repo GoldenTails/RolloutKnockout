@@ -197,15 +197,18 @@ RK.hud.game = function(v, p)
 				v.drawString((rkhud.x + 54),
 							(rkhud.y - 12), "x", 
 							vflags|V_ALLOWLOWERCASE, "small-right")
-				v.drawString((rkhud.x + 65),
+				v.drawString((rkhud.x + 56),
 							(rkhud.y - 16), p.lives, 
-							vflags|V_ALLOWLOWERCASE, "right")
+							vflags|V_ALLOWLOWERCASE, "left")
 			end
 		end
 		
 		-- Rock Percentage or NaN
 		if mo and mo.valid and mo.rock and mo.rock.valid
-			v.drawString(rkhud.x + 60, rkhud.y - 4, mo.rock.percent, vflags, "right")
+			local rkhrandtics = mo.rock.bumpcounttics and mo.rock.bumpcounttics/4 or 0
+			local rkhrand = { x = (rkhrandtics > 0) and v.RandomRange(-1, 1) or 0, 
+							y = (rkhrandtics > 0) and v.RandomRange(-1, 1) or 0 }
+			v.drawString(rkhrand.x + rkhud.x + 60, rkhrand.y + rkhud.y - 4, mo.rock.percent, vflags, "right")
 		else
 			v.drawString(rkhud.x + 60, rkhud.y - 4, "NaN", vflags|V_ALLOWLOWERCASE, "right")
 		end

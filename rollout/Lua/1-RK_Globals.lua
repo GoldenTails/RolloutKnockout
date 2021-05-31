@@ -61,3 +61,17 @@ rawset(_G, "spairs", function(t, order)
         end
     end
 end)
+
+rawset(_G, "FixedRemap", function(up1, low1, up2, low2, n)
+    return up2 + FixedDiv(FixedMul(n-up1, low2-up2),low1-up1)
+end)
+
+-- From Bomberman
+-- Eases from 'a' to 'b', with time value 't' being from 0 to 'tmax'
+-- Thanks to SwitchKaze for the original code
+rawset(_G, "cosEase", function(a, b, t, tmax)
+	local F = FRACUNIT
+    local ang = FixedAngle(FixedRemap(0,tmax*F,0,180*F,t*F))
+    local fac = -cos(ang)+F
+    return FixedRemap(0, F*2, a, b, fac)
+end)
