@@ -30,7 +30,7 @@ RK.plyr.deathThink1 = function(p)
 		local xpld = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMY) -- Spawn an object.
 		xpld.state = S_RXPL1
 		xpld.scale = 2*FRACUNIT
-		S_StartSound(mo, sfx_pplode) -- Play a sound.
+		S_StartSound(xpld, sfx_pplode) -- Play a sound.
 		P_StartQuake(40*FRACUNIT, 5) -- Shake the screen.
 		
 		-- We're already doing a number of flashy effects while exiting. 
@@ -44,7 +44,7 @@ RK.plyr.deathThink1 = function(p)
 			if not px.mo then continue end -- Mo doesn't exist? Skip
 			local idist = FixedHypot(FixedHypot(px.mo.x - p.mo.x, px.mo.y - p.mo.y), px.mo.z - p.mo.z)
 			if (idist < 512*FRACUNIT) then 
-				P_FlashPal(px, 1, 3)
+				P_FlashPal(px, 1, 5)
 			end
 		end
 		P_FlashPal(p, 1, 3)

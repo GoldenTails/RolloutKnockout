@@ -33,7 +33,7 @@ cv_rklives = CV_RegisterVar({
 		local serverornil = isdedicatedserver and nil or server
 		COM_BufInsertText(serverornil, "startinglives "..cv_rklives.value)
 		--print("Player lives has been set to "..cv_rklives.value)
-		if not G_GametypeUsesLives() then return end
+		if not (gametyperules & GTR_LIVES) then return end
 		for p in players.iterate
 			p.lives = cv_rklives.value
 		end

@@ -75,3 +75,11 @@ rawset(_G, "cosEase", function(a, b, t, tmax)
     local fac = -cos(ang)+F
     return FixedRemap(0, F*2, a, b, fac)
 end)
+
+rawset(_G, "SafeFreeslot", function(...)
+	for _, item in ipairs({...})
+		if rawget(_G, item) == nil
+			freeslot(item)
+		end
+	end
+end)
