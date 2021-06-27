@@ -13,17 +13,6 @@ rawset(_G, "INFLIVES", 0x7F) -- From SRB2 Source
 
 RK.WepRings = 0 -- Change to 1 to experiment with EXPERIMENTAL weapon ring abilities
 
--- Collision detect for objects (Z)
--- Kaysakado
--- "The issue with getting around SRB2's P_CheckPosition is that the floorz won't properly be updated"
-rawset(_G, "FreeSetZ", function(mo, newz)
-    local clip = (mo.flags & MF_NOCLIPTHING) ^^ MF_NOCLIPTHING
-
-    mo.flags = $ | clip
-    mo.z = newz
-    mo.flags = $ & ~clip
-end)
-
 rawset(_G, "createFlags", function(tname, t)
     for i = 1,#t do
 		rawset(_G, t[i], 2^(i-1))
@@ -37,6 +26,14 @@ rawset(_G, "createEnum", function(tname, t, from)
 		rawset(_G, t[i], from+(i-1))
 		table.insert(tname, {string = t[i], value = from+(i-1)} )
     end
+end)
+
+rawset(_G, "SafeFreeslot", function(...)
+	for _, item in ipairs({...})
+		if rawget(_G, item) == nil
+			freeslot(item)
+		end
+	end
 end)
 
 rawset(_G, "spairs", function(t, order)
@@ -76,10 +73,13 @@ rawset(_G, "cosEase", function(a, b, t, tmax)
     return FixedRemap(0, F*2, a, b, fac)
 end)
 
-rawset(_G, "SafeFreeslot", function(...)
-	for _, item in ipairs({...})
-		if rawget(_G, item) == nil
-			freeslot(item)
-		end
-	end
+-- Collision detect for objects (Z)
+-- Kaysakado
+-- "The issue with getting around SRB2's P_CheckPosition is that the floorz won't properly be updated"
+rawset(_G, "FreeSetZ", function(mo, newz)
+    local clip = (mo.flags & MF_NOCLIPTHING) ^^ MF_NOCLIPTHING
+
+    mo.flags = $ | clip
+    mo.z = newz
+    mo.flags = $ & ~clip
 end)
