@@ -59,9 +59,9 @@ end
 
 -- [Impact]
 SafeFreeslot("SPR_IPCT")
-for i = 0, 3 do
+for i = 0, 9 do
 	SafeFreeslot("S_IMPACT"..i+1)
-	states[S_IMPACT1+i] = {SPR_IPCT, i|FF_FULLBRIGHT, 4, nil, 0, 0, (i<3) and S_IMPACT1+(i+1) or S_NULL}
+	states[S_IMPACT1+i] = {SPR_IPCT, i|FF_FULLBRIGHT, (i==2) and 3 or 2, nil, 0, 0, (i<9) and S_IMPACT1+(i+1) or S_NULL}
 end
 
 -- Arrows!
