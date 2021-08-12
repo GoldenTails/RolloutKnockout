@@ -69,6 +69,29 @@ SafeFreeslot("SPR_RKAW")
 SafeFreeslot("S_RKAW1")
 states[S_RKAW1] = {SPR_RKAW, A|FF_FULLBRIGHT|FF_PAPERSPRITE, 2, nil, 0, 0, S_NULL}
 
+SafeFreeslot("MT_FSMOKE")
+SafeFreeslot("SPR_SMKA", "SPR_SMKB", "SPR_SMKC", "SPR_SMKD", "SPR_SMKE")
+SafeFreeslot("S_SMKA", "S_SMKB", "S_SMKC", "S_SMKD", "S_SMKE")
+mobjinfo[MT_FSMOKE] = { -- Fancy Smoke
+	spawnstate = S_SMKD,
+	doomednum = 3204,
+	spawnhealth = 1000,
+	radius = 16*FRACUNIT,
+	height = 32*FRACUNIT,
+	dispoffset = 32,
+	flags = MF_NOGRAVITY|MF_NOCLIPTHING|MF_NOBLOCKMAP|MF_NOCLIPHEIGHT|MF_NOCLIP,
+}
+-- Fancy smoke states. Yes... There are this many frames...
+states[S_SMKA] = {SPR_SMKA, FF_ANIMATE, 27, nil, 27, 1, S_SMKB}
+states[S_SMKB] = {SPR_SMKB, FF_ANIMATE, 27, nil, 27, 1, S_SMKC}
+states[S_SMKC] = {SPR_SMKC, FF_ANIMATE, 27, nil, 27, 1, S_SMKD}
+states[S_SMKD] = {SPR_SMKD, FF_ANIMATE, 27, nil, 27, 1, S_SMKE}
+states[S_SMKE] = {SPR_SMKE, FF_ANIMATE, 27, nil, 27, 1, S_SMKA}
+-- Random state upon spawn.
+addHook("MobjSpawn", function(mo)
+	mo.state = P_RandomRange(S_SMKA, S_SMKE)
+end, MT_FSMOKE)
+
 -- Item 'boxes'
 SafeFreeslot("SPR_RKIB")
 for i = 0, 1

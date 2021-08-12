@@ -1,3 +1,9 @@
+Wipes
+Level_ToBlack = 50
+Level_Final = 50
+MultInter_ToBlack = 52
+MultInter_Final = 51
+
 Level R2
 LevelName = Rocky Coastline
 Subtitle = By So2ro
