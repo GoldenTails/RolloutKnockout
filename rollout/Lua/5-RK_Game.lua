@@ -91,7 +91,8 @@ addHook("HurtMsg", function(p, i, s)
 end)
 
 addHook("TeamSwitch", function(p, team, fromspectators)
-	if G_IsRolloutGametype() and G_GametypeUsesLives() then
+	if G_IsRolloutGametype() and G_GametypeUsesLives() 
+	and (gamestate == GS_LEVEL) then
 		if p and p.valid then
 			-- Cheeky check for those that die, become a spectator, and attempt to re-enter the game...
 			if fromspectators then

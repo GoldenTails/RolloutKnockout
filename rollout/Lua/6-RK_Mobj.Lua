@@ -335,6 +335,7 @@ addHook("MobjThinker", function(mo)
 		
 		-- Percentage Based goodies
 		if assert(type(mo.percent) == "number") then
+			if (mo.percent > 999) then mo.percent = 999 end -- Cap at 999%
 			if (mo.percent >= 75) then
 				local threshold = (6 - (mo.percent/50))
 				if (threshold < 1) then threshold = 1 end
@@ -525,6 +526,7 @@ addHook("MobjMoveCollide", function(tmthing, thing)
 			
 			if assert(type(thing.percent) == "number") then
 				thing.percent = $ + impact.intensity/FRACUNIT
+				if (thing.percent > 999) then thing.percent = 999 end
 			end
 
 			if (thing.percent > 30) -- Below 30 Percent, process normal knockback behavior.
