@@ -221,28 +221,50 @@ addHook("MobjThinker", function(mo)
 				and not (leveltime%2) then
 					mo.color = mo.lastbumper.color
 				else
-					-- Otherwise, set your color to your target
-					mo.color = mo.target.color
+					mo.color = mo.target.color 	-- Otherwise, set your color to your target
 				end
 			end
 			
 			-- Percentages and Arrows
 			if mo.target.player and mo.target.player.valid then
 				local p = mo.target.player -- Simplify
-				local closestmo = RK.mobj.look4ClosestMo(mo, 512*FRACUNIT, MT_ROLLOUTROCK) -- Look for a mo that's closest to us.
 				
-				if closestmo -- Found one?
-					if not consoleplayer or not consoleplayer.valid then return end -- Error checking, something has gone horribly wrong.
-					
-					if (p == consoleplayer) -- Don't display for us.
-					and not splitscreen then
-						RK.mobj.spawnMobjPercent(closestmo) -- Spawn it's percent!
+				if (cv_rkpercentview.value == 2) then
+					for m in mobjs.iterate() do
+						if (m == mo) then continue end -- Skip us
+						if (m.type ~= MT_ROLLOUTROCK) then continue end -- Only look for other MT_ROLLOUTROCK's
+						if (m.health <= 0) then continue end -- Dead
+						if (m.flags & MF_NOBLOCKMAP) or (m.flags & MF_SCENERY) then continue end -- Not Part of the blockmap. Ignore
+						local dist = FixedHypot(FixedHypot(m.x - mo.x, m.y - mo.y), 2*(m.z - mo.z))
+						
+						if (dist < 512*FRACUNIT) then
+							if (p == consoleplayer) -- Don't display for us.
+							and not splitscreen then
+								RK.mobj.spawnMobjPercent(m)
+							end
+							
+							local xydist = FixedHypot(m.x - mo.x, m.y - mo.y)
+							if (xydist > 8*mo.radius) then
+								RK.mobj.spawnArrow(mo, m, 512*FRACUNIT)
+							end
+						end
 					end
+				elseif (cv_rkpercentview.value == 1) then
+					local closestmo = RK.mobj.look4ClosestMo(mo, 512*FRACUNIT, MT_ROLLOUTROCK) -- Look for a mo that's closest to us.
 					
-					-- Distance check. Do not care about Z
-					local dist = FixedHypot(closestmo.x - mo.x, closestmo.y - mo.y)
-					if (dist > 8*mo.radius) then
-						RK.mobj.spawnArrow(mo, closestmo, 512*FRACUNIT)
+					if closestmo -- Found one?
+						if not consoleplayer or not consoleplayer.valid then return end -- Error checking, something has gone horribly wrong.
+						
+						if (p == consoleplayer) -- Don't display for us.
+						and not splitscreen then
+							RK.mobj.spawnMobjPercent(closestmo) -- Spawn it's percent!
+						end
+						
+						-- Distance check. Do not care about Z
+						local xydist = FixedHypot(closestmo.x - mo.x, closestmo.y - mo.y)
+						if (xydist > 8*mo.radius) then
+							RK.mobj.spawnArrow(mo, closestmo, 512*FRACUNIT)
+						end
 					end
 				end
 			end
@@ -378,7 +400,7 @@ addHook("MobjThinker", function(mo)
 		elseif (mo.state == S_RKITEMBOX2) -- Outer ring
 			if mo.target and mo.target.valid
 			and mo.target.health then
-				if (mo.target == MT_ROLLOUTROCK)
+				if (mo.target == MT_ROLLOUTROCK) then
 					P_TeleportMove(mo, mo.target.x, mo.target.y, mo.target.z)
 				else
 					P_TeleportMove(mo, mo.target.x, mo.target.y, mo.target.z)

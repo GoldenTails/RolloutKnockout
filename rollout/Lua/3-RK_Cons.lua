@@ -27,7 +27,7 @@ rawset(_G, "cv_rklives", {value = 3}) -- This avoids a console warning. This tab
 cv_rklives = CV_RegisterVar({
 	name = "rk_setlives",
 	defaultvalue = 3,
-	flags = CV_NETVAR|CV_CALL,
+	flags = CV_NETVAR|CV_CALL|CV_SAVE,
 	PossibleValue = {MIN = 1, MAX = 99},
 	Func = function()
 		local serverornil = isdedicatedserver and nil or server
@@ -39,3 +39,12 @@ cv_rklives = CV_RegisterVar({
 		end
 	end,
 })
+
+-- Manually change your viewing of percentages
+rawset(_G, "cv_rkpercentview", CV_RegisterVar({
+	name = "rk_percentview",
+	defaultvalue = 2,
+	flags = CV_SAVE,
+	PossibleValue = {Off = 0, Closest = 1, All = 2},
+	func = 0,
+}))
