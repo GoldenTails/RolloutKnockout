@@ -1,0 +1,220 @@
+FREESLOT
+MT_CCZSIG
+SPR_FTRE
+S_CCZSIG
+MT_CCZFWR
+SPR_CCFR
+S_CCZFWR1
+S_CCZFWR2
+S_CCZFWR3
+MT_POPPER
+S_POPPER
+S_POPPOP1
+S_POPPOP2
+S_POPPOP3
+S_POPPOP4
+S_POPPOP5
+S_POPPOP6
+SPR_POPR
+MT_EX2BUMPER
+SPR_BMP2
+S_EX2BUMPER1
+S_EX2BUMPER2
+S_EX2BUMPER3
+
+
+
+OBJECT MT_CCZSIG
+#$Name "Future Sign Post"
+#$Sprite "FTRE"
+#$Category "Collision Chaos"
+MAPTHINGNUM = 2021
+SPAWNSTATE = S_CCZSIG
+SPAWNHEALTH = 1000
+SEESTATE = S_NULL
+REACTIONTIME = 8
+PAINSOUND = sfx_None
+RADIUS = 12*FRACUNIT
+HEIGHT = 108*FRACUNIT
+DAMAGE = 0
+FLAGS = MF_SOLID|MF_SCENERY
+
+State S_CCZSIG
+SpriteName = FTRE
+SpriteFrame = A
+Duration = -1
+Action = None
+Var1 = 0
+Var2 = 0
+Next = S_NULL
+
+OBJECT MT_CCZFWR
+#$Name "Collision Chaos Flower"
+#$Sprite "CCFR"
+#$Category "Collision Chaos"
+MAPTHINGNUM = 2022
+SPAWNSTATE = S_CCZFWR1
+SPAWNHEALTH = 1000
+SEESTATE = S_NULL
+REACTIONTIME = 8
+PAINSOUND = sfx_None
+RADIUS = 16*FRACUNIT
+HEIGHT = 32*FRACUNIT
+DAMAGE = 0
+FLAGS = MF_NOBLOCKMAP|MF_NOCLIP|MF_SCENERY
+
+State S_CCZFWR1
+SpriteName = CCFR
+SpriteFrame = A
+Duration = 2
+Action = None
+Var1 = 0
+Var2 = 0
+Next = S_CCZFWR2
+
+State S_CCZFWR2
+SpriteName = CCFR
+SpriteFrame = B
+Duration = 2
+Action = None
+Var1 = 0
+Var2 = 0
+Next = S_CCZFWR3
+
+State S_CCZFWR3
+SpriteName = CCFR
+SpriteFrame = C
+Duration = 2
+Action = None
+Var1 = 0
+Var2 = 0
+Next = S_CCZFWR1
+
+OBJECT MT_POPPER
+#$Name "Popper"
+#$Sprite "POPR"
+#$Category "Collision Chaos"
+MAPTHINGNUM = 2023
+SPAWNSTATE = S_POPPER
+SPAWNHEALTH = 1000
+SEESTATE = S_NULL
+REACTIONTIME = 8
+PAINSOUND = sfx_s3k77
+DEATHSTATE = S_POPPOP2
+RAISESTATE = S_POPPOP1
+RADIUS = 32*FRACUNIT
+HEIGHT = 64*FRACUNIT
+DAMAGE = 0
+MASS = 20*FRACUNIT
+FLAGS = MF_SPRING|MF_NOGRAVITY
+
+State S_POPPER
+SpriteName = POPR
+SpriteFrame = A
+Duration = -1
+Action = None
+Var1 = 2
+Var2 = 5
+Next = S_NULL
+
+State S_POPPOP1
+SpriteName = POPR
+SpriteFrame = B
+Duration = 0
+Action = A_RemoteDamage
+Var1 = 0
+Var2 = 1
+Next = S_POPPOP2
+
+State S_POPPOP2
+SpriteName = POPR
+SpriteFrame = B
+Duration = 1
+Action = A_Pain
+Var1 = 0
+Var2 = 0
+Next = S_POPPOP3
+
+State S_POPPOP3
+SpriteName = POPR
+SpriteFrame = C
+Duration = 4
+Action = None
+Var1 = 0
+Var2 = 0
+Next = S_POPPOP4
+
+State S_POPPOP4
+SpriteName = NULL
+SpriteFrame = A
+Duration = 35
+Action = A_CheckFlags2
+Var1 = MF2_AMBUSH
+Var2 = 0
+Next = S_POPPOP5
+
+State S_POPPOP5
+SpriteName = NULL
+SpriteFrame = A
+Duration = 998
+Action = None
+Var1 = 0
+Var2 = 0
+Next = S_POPPOP6
+
+State S_POPPOP6
+SpriteName = NULL
+SpriteFrame = A
+Duration = 0
+Action = A_SpawnFreshCopy
+Var1 = 0
+Var2 = 0
+Next = S_NULL
+
+
+OBJECT MT_EX2BUMPER
+#$Name "Collision Chaos Bumper"
+#$Sprite "BMP2"
+#$Category "Collision Chaos"
+MAPTHINGNUM = 2024
+SpawnState = S_EX2BUMPER1
+SpawnHealth = 1000
+SeeState = S_NULL
+ReactionTime = 5
+RaiseState = S_EX2BUMPER2
+PainSound = sfx_cdpcm9
+PainChance = -1
+Radius = 32*FRACUNIT
+Height = 64*FRACUNIT
+Damage = 0
+MASS = 16*FRACUNIT
+FLAGS = MF_SPRING|MF_NOGRAVITY
+
+State S_EX2BUMPER1
+SpriteName = BMP2
+SpriteFrame = A
+Duration = -1
+Action = None
+Var1 = 3
+Var2 = 4
+Next = S_NULL
+
+State S_EX2BUMPER2
+SpriteName = BMP2
+SpriteFrame = B
+Duration = 1
+Action = A_Pain
+Var1 = 1
+Var2 = 3
+Next = S_EX2BUMPER3
+
+State S_EX2BUMPER3
+SpriteName = BMP2
+SpriteFrame = C
+Duration = 1
+Action = A_Pain
+Var1 = 1
+Var2 = 3
+Next = S_EX2BUMPER1
+
+

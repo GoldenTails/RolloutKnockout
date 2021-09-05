@@ -15,7 +15,10 @@ RK.mobj.spawnAura = function(mo, color)	-- spawn a aura around mo
 	if leveltime%2 then return end
 	if not mo or not mo.valid then return end
 	color = $ or SKINCOLOR_TEAL
-	assert(type(color) == "number", "Error: spawnAura expects a number")
+	if (type(color) ~= "number") then
+		error("Error: spawnAura expects a number")
+		return
+	end
 	local baseangle = P_RandomRange(1, 360)*ANG1
 	local dist = 30
 	for i = 0, 12 do
@@ -54,7 +57,10 @@ RK.mobj.spawnArrow = function(mo, target, dist)
 	-- Need both a source 'mo' and a target 'mo'
 	if not mo or not mo.valid then return end
 	if not target or not target.valid then return end
-	assert(type(dist) == "number", "Error: spawnArrow expects a number")
+	if (type(dist) ~= "number") then
+		error("Error: spawnArrow expects a number")
+		return
+	end
 	
 	local arw = P_SpawnMobj(mo.x, mo.y, mo.z + mo.height/2, MT_DUMMY)
 	arw.state = S_RKAW1
@@ -83,7 +89,10 @@ end
 RK.mobj.spawnSmoke = function(mo, freq)
 	if not mo or not mo.valid then return end
 	freq = $ or 3
-	assert(type(freq) == "number", "Error: spawnSmoke expects a number")
+	if (type(freq) ~= "number") then
+		error("Error: spawnSmoke expects a number")
+		return
+	end
 
 	if not (leveltime%freq) then
 		local r = mo.radius>>FRACBITS
@@ -126,7 +135,10 @@ RK.mobj.spawnRecoilSmoke = function(mo)
 end
 
 RK.mobj.spawnMobjPercent = function(mo)
-	assert(type(mo.percent) == "number", "Error: spawnMobjPercent mo does not have a .percent!")
+	if (type(mo.percent) ~= "number") then
+		error("Error: spawnMobjPercent mo does not have a .percent!")
+		return
+	end
 	local nstr = tostring(mo.percent)
 	local nlen = nstr:len()
 	

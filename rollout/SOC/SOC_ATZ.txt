@@ -1,0 +1,55 @@
+Freeslot
+SPR_ATFL
+MT_AZUREFLAME
+S_AZUREFLAME1
+S_AZUREFLAME2
+S_AZUREFLAME3
+S_AZUREFLAME4
+
+#Large Green Flame
+Object MT_AZUREFLAME
+#$Name "Large Green Flame"
+#$Sprite ATFL
+#$Category "Azure Temple"
+MapThingNum = 2025
+SpawnState = S_AZUREFLAME1
+ReactionTime = 8
+Radius = 16*FRACUNIT
+Height = 64*FRACUNIT
+Flags = MF_NOGRAVITY|MF_PAIN
+
+State S_AZUREFLAME1
+SpriteName = ATFL
+SpriteFrame = A|FF_FULLBRIGHT
+Duration = 3
+Action = None
+Var1 = 0
+Var2 = 0
+Next = S_AZUREFLAME2
+
+State S_AZUREFLAME2
+SpriteName = ATFL
+SpriteFrame = B|FF_FULLBRIGHT
+Duration = 3
+Action = None
+Var1 = 0
+Var2 = 0
+Next = S_AZUREFLAME3
+
+State S_AZUREFLAME3
+SpriteName = ATFL
+SpriteFrame = C|FF_FULLBRIGHT
+Duration = 3
+Action = None
+Var1 = 0
+Var2 = 0
+Next = S_AZUREFLAME4
+
+State S_AZUREFLAME4
+SpriteName = ATFL
+SpriteFrame = D|FF_FULLBRIGHT
+Duration = 3
+Action = None
+Var1 = 0
+Var2 = 0
+Next = S_AZUREFLAME1

@@ -4,6 +4,15 @@ Level_Final = 50
 MultInter_ToBlack = 52
 MultInter_Final = 51
 
+Level R1
+NextLevel = R2
+Levelname = Azure Temple
+Subtitle = By Ice Face
+Music = ATZ
+SkyNum = 35
+TypeOfLevel = ROLLOUT
+SelectHeading = Big Maps
+
 Level R2
 LevelName = Rocky Coastline
 Subtitle = By So2ro
@@ -12,6 +21,15 @@ TypeOfLevel = ROLLOUT
 Skynum = 14
 SelectHeading = Big Maps
 NextLevel = RI
+
+Level RH
+NextLevel = RI
+Levelname = Collision Chaos
+Subtitle = By Ice Face
+Music = CCZ
+SkyNum = 720
+TypeOfLevel = ROLLOUT
+SelectHeading = Small Maps
 
 Level RI
 LevelName = Techno Silo
@@ -60,6 +78,16 @@ TypeOfLevel = ROLLOUT
 Skynum = 13
 SelectHeading = Small Maps
 NextLevel = R2
+
+Level RN
+LevelName = Greenflower Mountain
+Music = GFZ1
+SkyNum = 1
+SkyboxScale = 8
+NoZone = true
+TypeOfLevel = ROLLOUT
+SelectHeading = Small Maps
+Subtitle = By happyalm
 
 #Level S1
 #Levelname = Grassy Floats
