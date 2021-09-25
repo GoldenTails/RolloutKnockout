@@ -30,6 +30,8 @@ RK.plyr.deathThink1 = function(p)
 		local xpld = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMY) -- Spawn an object.
 		xpld.state = S_RXPL1
 		xpld.scale = 2*FRACUNIT
+		/*local xpld = P_SpawnMobj(mo.x, mo.y, mo.z + mo.height/2, MT_DUMMY) -- Spawn an object.
+		xpld.state = S_SXPA*/
 		S_StartSound(xpld, sfx_pplode) -- Play a sound.
 		P_StartQuake(40*FRACUNIT, 5) -- Shake the screen.
 		
@@ -44,14 +46,14 @@ RK.plyr.deathThink1 = function(p)
 			if not px.mo then continue end -- Mo doesn't exist? Skip
 			local idist = FixedHypot(FixedHypot(px.mo.x - p.mo.x, px.mo.y - p.mo.y), px.mo.z - p.mo.z)
 			if (idist < 512*FRACUNIT) then 
-				P_FlashPal(px, 1, 5)
+				P_FlashPal(px, 1, 3)
 			end
 		end
 		P_FlashPal(p, 1, 3)
 	end
 end
 
-/*RK.plyr.deathThink2 = function(p)
+RK.plyr.deathThink2 = function(p)
 	if not p or not p.valid then return end
 	if not p.mo or not p.mo.valid then return end
 	
@@ -63,7 +65,11 @@ end
 		mo.momy = 0
 		mo.momz = 0
 		
-		for i = 0, 1 do
+		local xpldbg = P_SpawnMobj(mo.x, mo.y, mo.z + mo.height/2, MT_DUMMY) -- Spawn an object.
+		xpldbg.state = S_EFXA
+		xpldbg.scale = 2*FRACUNIT
+		xpldbg.fuse = 5*TICRATE
+		/*for i = 0, 1 do
 			local xpld = P_SpawnMobj(mo.x, mo.y, mo.z, MT_DUMMY)
 			xpld.color = SKINCOLOR_WHITE
 			xpld.tics = 3*TICRATE
@@ -73,10 +79,10 @@ end
 				xpld.destscale = 3*FRACUNIT
 				xpld.scalespeed = xpld.destscale/TICRATE
 			end
-		end
+		end*/
 		P_StartQuake(35*FRACUNIT, 5)
 	end
-end*/
+end
 
 addHook("PreThinkFrame", do
 	for p in players.iterate

@@ -459,7 +459,6 @@ addHook("MobjMoveCollide", function(tmthing, thing)
 	end
 end, MT_ROLLOUTROCK) -- Rock vs Dummy object
 
-
 -- Score object
 addHook("MobjThinker", function(mo)
 	if mo and mo.valid
@@ -543,7 +542,11 @@ addHook("MobjMoveCollide", function(tmthing, thing)
 										MT_DUMMY)
 							}
 			P_StartQuake(abs(tmthing.momx) + abs(tmthing.momy), 5)
-			impact.mobj.state = S_IMPACT1
+			if thing.lastbumper and (thing.lastbumpertics > 9*TICRATE) then
+				impact.mobj.state = S_SXPA
+			else
+				impact.mobj.state = S_IMPACT1
+			end
 
 			if tmthing.target and tmthing.target.valid then
 				-- Collision! for points!

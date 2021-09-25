@@ -20,7 +20,18 @@ Music = MP_COA
 TypeOfLevel = ROLLOUT
 Skynum = 14
 SelectHeading = Big Maps
-NextLevel = RI
+NextLevel = R3
+
+Level R3
+LevelName = Gusty Garden
+Music = AGZ
+SkyNum = 40
+SkyboxScale = 8
+TypeOfLevel = ROLLOUT
+SelectHeading = Big Maps
+Subtitle = By happyalm
+Lua.rockfloat = true
+NextLevel = RH
 
 Level RH
 NextLevel = RI
@@ -77,7 +88,7 @@ Music = VSALT
 TypeOfLevel = ROLLOUT
 Skynum = 13
 SelectHeading = Small Maps
-NextLevel = R2
+NextLevel = RN
 
 Level RN
 LevelName = Greenflower Mountain
@@ -88,6 +99,7 @@ NoZone = true
 TypeOfLevel = ROLLOUT
 SelectHeading = Small Maps
 Subtitle = By happyalm
+NextLevel = RO
 
 #Level S1
 #Levelname = Grassy Floats

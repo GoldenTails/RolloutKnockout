@@ -45,6 +45,7 @@ for i = 0, 3
 end
 
 -- Flame
+-- Detailed explosion
 SafeFreeslot("SPR_RXPL")
 for i = 0, 19 do
 	SafeFreeslot("S_RXPL"..i+1)
@@ -91,6 +92,16 @@ states[S_SMKE] = {SPR_SMKE, FF_ANIMATE, 27, nil, 27, 1, S_SMKA}
 addHook("MobjSpawn", function(mo)
 	mo.state = P_RandomRange(S_SMKA, S_SMKE)
 end, MT_FSMOKE)
+
+-- 'Charged' Electro orb
+SafeFreeslot("SPR_EFXA")
+SafeFreeslot("S_EFXA")
+states[S_EFXA] = {SPR_EFXA, A|FF_FULLBRIGHT|FF_ANIMATE, -1, nil, 20, 1, S_NULL}
+
+-- 'Special' Explosion
+SafeFreeslot("SPR_SXPA")
+SafeFreeslot("S_SXPA")
+states[S_SXPA] = {SPR_SXPA, A|FF_FULLBRIGHT|FF_ANIMATE, 16, nil, 16, 1, S_NULL}
 
 -- Item 'boxes'
 SafeFreeslot("SPR_RKIB")
