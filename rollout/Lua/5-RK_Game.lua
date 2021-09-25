@@ -15,10 +15,15 @@ RK.game.exiting = { var = 0, ticker = 0 }
 RK.game.countInGamePlayers = function()
 	local playeringame = 0
 	for p in players.iterate
-		if p.spectator then continue end -- We're a spectator. Skip.
-		if not p.mo then continue end -- Not a mo object. Skip.
+		--if p.spectator then continue end -- We're a spectator. Skip.
+		if not p.realmo then continue end -- Player does not have a mo object. Skip.
 		if p.bot then continue end  -- Player is a bot. Skip.
-		if G_GametypeUsesLives() and (p.lives <= 0) then continue end -- Out of lives
+		if (p.lives <= 0) then continue end -- Out of lives
+		if G_GametypeUsesLives() -- Rollout gametype uses lives?
+		and p.spectatetics
+		and (p.spectatetics > cv_rkspectatoridle.value*TICRATE) then -- Spectator has been idle for X seconds or more
+			continue -- Skip counting this player, this person isn't 'playing'
+		end
 		playeringame = $ + 1
 	end
 	return playeringame
@@ -35,7 +40,21 @@ RK.game.countTotalTeamPlayers = function(p) -- p 'host' needed too pass variable
 	return totalteamplayers
 end
 
-RK.game.countTotalPlayers = function()
+/*RK.game.countActiveSpectators = function() -- Self explainitory
+	local actSpec = 0
+	for p in players.iterate
+		if not p.spectator then continue end -- Not a spectator. Skip.
+		if not p.realmo then continue end -- Player does not have a mo object. Skip.
+		if pt.bot then continue end  -- Player is a bot. Skip.
+		
+		-- TODO: If I ever uncomment this, make a check for when a player is a spectator and hasn't *moved* in a period of time.
+		-- Most of that is already here, but checking if a spectator player hasn't pressed a button  for some time isn't here.
+		actSpec = $ + 1
+	end
+	return actSpec
+end*/
+
+RK.game.countTotalPlayers = function() -- Counts total number of in-game players
 	local totalplayers = 0
 	for p in players.iterate
 		totalplayers = $ + 1

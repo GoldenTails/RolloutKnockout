@@ -93,14 +93,17 @@ addHook("PreThinkFrame", do
 end)
 
 addHook("PlayerSpawn", function(player)
-	if G_IsRolloutGametype() and (player.mo and player.mo.valid) then
-		player.ingametics = 0
+	player.ingametics = 0
+	player.spectatetics = 0
+	
+	local mo = player.mo or player.realmo
+	if G_IsRolloutGametype() and (mo and mo.valid) and not player.spectator then
 		player.powers[pw_nocontrol] = TICRATE/3
-		player.mo.rock = P_SpawnMobj(player.mo.x, player.mo.y, player.mo.z, MT_ROLLOUTROCK) -- Spawn rock at Player's current x/y/z.
-		if not player.mo.rock then return end -- Something has gone horribly wrong
-		P_TeleportMove(player.mo, player.mo.x, player.mo.y, player.mo.z + player.mo.rock.height) -- Place player "on" the rock
+		mo.rock = P_SpawnMobj(mo.x, mo.y, mo.z, MT_ROLLOUTROCK) -- Spawn rock at Player's current x/y/z.
+		if not mo.rock or not mo.rock.valid then return end -- Something has gone horribly wrong
+		local rock = mo.rock -- Simplify
+		P_TeleportMove(mo, mo.x, mo.y, mo.z + rock.height) -- Place player "on" the rock
 		
-		local rock = player.mo.rock -- Simplify
 		rock.target = player.mo -- Target the player that spawned you. See "MobjThinker"
 		rock.colorized = true
 		if not (mapheaderinfo[gamemap].rockfloat) then
@@ -253,14 +256,11 @@ end)
 
 addHook("PlayerThink", function(p)
 	if G_IsRolloutGametype() then
-		if p and p.valid
-		and p.mo and p.mo.valid then
-			local cmd = p.cmd
-			if (p.playerstate ~= PST_DEAD) then
-				if (p.playerstate == PST_LIVE) then p.ingametics = $ + 1 end
-			elseif (p.playerstate == PST_DEAD) then
-				RK.plyr.deathThink1(p)
-			end
+		if p.spectator then p.spectatetics = $ + 1 end
+		if (p.playerstate ~= PST_DEAD) then
+			if (p.playerstate == PST_LIVE) and not p.spectator then p.ingametics = $ + 1 end
+		elseif (p.playerstate == PST_DEAD) then
+			RK.plyr.deathThink1(p)
 		end
 	end
 end)
