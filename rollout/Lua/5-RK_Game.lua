@@ -21,7 +21,7 @@ RK.game.countInGamePlayers = function()
 		if (p.lives <= 0) then continue end -- Out of lives
 		if G_GametypeUsesLives() -- Rollout gametype uses lives?
 		and p.spectatetics
-		and (p.spectatetics > cv_rkspectatoridle.value*TICRATE) then -- Spectator has been idle for X seconds or more
+		and (p.spectatetics > cv_rkspectatoridle.value*TICRATE*60) then -- Spectator has been idle for X minutes or more
 			continue -- Skip counting this player, this person isn't 'playing'
 		end
 		playeringame = $ + 1
@@ -65,6 +65,14 @@ end
 addHook("ThinkFrame", do
 	if G_IsRolloutGametype() then
 		if not RK.game.exiting.var then RK.game.exiting.ticker = 0 end
+		
+		if (gametyperules & GTR_TIMELIMIT) then -- Gametype has a timelimit
+			local timelimit = CV_FindVar("timelimit").value * TICRATE * 60 -- 'Timelimit' console variable
+			if timelimit and (leveltime > (timelimit - 4*TICRATE))  -- 4 seconds before 'Timelimit' console variable
+			and not RK.game.exiting.ticker then -- Not already exiting
+				RK.game.exiting.var = true -- Start the exit process
+			end
+		end
 		
 		if (RK.game.countTotalPlayers() > 1) -- Number of total players is > 1
 		and (RK.game.countInGamePlayers() == 1) -- And the number of in-game players are 1

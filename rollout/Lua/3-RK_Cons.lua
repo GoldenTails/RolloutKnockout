@@ -52,8 +52,8 @@ rawset(_G, "cv_rkpercentview", CV_RegisterVar({
 -- Set the amount of time (in seconds) spectators can be idle for.
 rawset(_G, "cv_rkspectatoridle", CV_RegisterVar({
 	name = "rk_spectatoridle",
-	defaultvalue = 30,
+	defaultvalue = 1,
 	flags = CV_SAVE|CV_NETVAR,
-	PossibleValue = {MIN = 30, MAX = 3600},
+	PossibleValue = {MIN = 1, MAX = 60},
 	func = 0,
 }))
