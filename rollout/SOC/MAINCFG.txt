@@ -23,14 +23,12 @@ SelectHeading = Big Maps
 NextLevel = R3
 
 Level R3
-LevelName = Gusty Garden
-Music = AGZ
-SkyNum = 40
-SkyboxScale = 8
+LevelName = Pristine Waters
+Music = GFZ2
 TypeOfLevel = ROLLOUT
+SkyNum = 40
 SelectHeading = Big Maps
-Subtitle = By happyalm
-Lua.rockfloat = true
+SkyboxScale = 16
 NextLevel = RH
 
 Level RH
@@ -100,6 +98,17 @@ TypeOfLevel = ROLLOUT
 SelectHeading = Small Maps
 Subtitle = By happyalm
 NextLevel = RO
+
+Level RO
+LevelName = Gusty Garden
+Music = AGZ
+SkyNum = 40
+SkyboxScale = 8
+TypeOfLevel = ROLLOUT
+SelectHeading = Small Maps
+Subtitle = By happyalm
+Lua.rockfloat = true
+NextLevel = R1
 
 #Level S1
 #Levelname = Grassy Floats

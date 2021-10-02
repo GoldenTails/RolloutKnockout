@@ -135,12 +135,14 @@ addHook("JumpSpecial", function(p)
 					S_StartSound(mo, sfx_s3kb6) -- Spin Launch
 					
 					p.weapondelay = (3*TICRATE)
-					p.mo.rock.rkability = WEP_RAIL
-					p.mo.rock.rkabilitytics = (3*TICRATE)/4
+					--p.mo.rock.rkability = WEP_RAIL
+					mo.rock.rkabilitytics = (3*TICRATE)/4
 					p.powers[pw_flashing] = TICRATE/3
 					p.powers[pw_nocontrol] = TICRATE/2
 					P_InstaThrust(mo.rock, mo.angle, p.normalspeed/2)
-					P_SetObjectMomZ(mo.rock, 5*FRACUNIT, true)
+					local zDashfactor = 5*FRACUNIT
+					if (mo.rock.eflags & MFE_UNDERWATER) then zDashfactor = $ / 2 end
+					P_SetObjectMomZ(mo.rock, zDashfactor, true)
 
 				elseif (p.currentweapon == WEP_AUTO) -- Automatic Ring
 				and (p.ringweapons & RW_AUTO) -- Weapon ring able to be fired
@@ -212,8 +214,8 @@ addHook("JumpSpecial", function(p)
 					--S_StartSound(mo, sfx_antiri) -- Play a sound...
 					S_StartSound(mo.target, sfx_kc65)
 					p.weapondelay = 5*TICRATE -- Cooldown
-					p.mo.rock.rkability = p.currentweapon
-					p.mo.rock.rkabilitytics = (3*TICRATE)/4
+					mo.rock.rkability = p.currentweapon
+					mo.rock.rkabilitytics = (3*TICRATE)/4
 					p.powers[pw_nocontrol] = TICRATE
 					P_SetObjectMomZ(mo.rock, p.jumpfactor, false)
 					
