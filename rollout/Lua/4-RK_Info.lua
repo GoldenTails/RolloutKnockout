@@ -118,4 +118,13 @@ sfxinfo[sfx_pplode].caption = "Player Explode"
 SafeFreeslot("sfx_wwipe")
 SafeFreeslot("sfx_whit")
 SafeFreeslot("sfx_whitf")
- 
+
+/*SafeFreeslot("SKINCOLOR_COOLDOWN")
+skincolors[SKINCOLOR_COOLDOWN] = {
+    name = "Cooldown",
+    ramp = {233,233,234,235,236,236,237,237,239,239,239,28,29,30,30,31},
+    invcolor = SKINCOLOR_BLUE,
+    invshade = 158,
+    chatcolor = V_BROWNMAP,
+    accessible = false
+}*/

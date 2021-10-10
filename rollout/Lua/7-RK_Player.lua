@@ -86,8 +86,16 @@ end
 
 addHook("PreThinkFrame", do
 	for p in players.iterate
-		if (p.weapondelay <= 2) then
-			p.weapondelay = 2 -- Do not fire rings. Ever.
+		if G_IsRolloutGametype() 
+			-- Do not fire rings. Ever.
+			if (p.weapondelay <= 2) then p.weapondelay = 2 end
+			
+			local cmd = p.cmd
+			if (cmd.buttons & BT_CUSTOM1)
+			or (cmd.buttons & BT_CUSTOM2)
+			or (cmd.buttons & BT_CUSTOM3) then
+				cmd.buttons = $ & ~(BT_CUSTOM1|BT_CUSTOM2|BT_CUSTOM3)
+			end
 		end
 	end
 end)
@@ -102,19 +110,61 @@ addHook("PlayerSpawn", function(player)
 		mo.rock = P_SpawnMobj(mo.x, mo.y, mo.z, MT_ROLLOUTROCK) -- Spawn rock at Player's current x/y/z.
 		if not mo.rock or not mo.rock.valid then return end -- Something has gone horribly wrong
 		local rock = mo.rock -- Simplify
-		P_TeleportMove(mo, mo.x, mo.y, mo.z + rock.height) -- Place player "on" the rock
+		if (mo.eflags & MFE_VERTICALFLIP) then -- Place player "on" the rock
+			P_TeleportMove(mo, mo.x, mo.y, mo.z - FRACUNIT)
+		else
+			P_TeleportMove(mo, mo.x, mo.y, mo.z + rock.height)
+		end
 		
 		rock.target = player.mo -- Target the player that spawned you. See "MobjThinker"
 		rock.colorized = true
-		if not (mapheaderinfo[gamemap].rockfloat) then
-			rock.flags2 = $ | MF2_AMBUSH
-		end
+		-- Make your rock float in water if level header options dictate it.
+		if not (mapheaderinfo[gamemap].rockfloat) then rock.flags2 = $ | MF2_AMBUSH end
+		
 		rock.percent = 0
 		rock.bumpcount = 0
 		rock.rkability = 0
 		rock.rkabilitytics = 0
 	end
 end)
+
+RK.DrainAmmo = function(p, power, amount)
+	if power and amount then
+		-- Drain power by specific amount
+		p.powers[power] = $ - amount
+		p.rings = $ - amount
+		if (p.powers[power] < 0) then p.powers[power] = 0 end
+	elseif power and not amount then
+		-- Drain power by default amount (1)
+		p.powers[power] = $ - 1
+		p.rings = $ - 1
+		if (p.powers[power] < 0) then p.powers[power] = 0 end
+	elseif amount and not power then
+		-- Drain rings by specific amount
+		p.rings = $ - amount
+		if (p.rings < 0) then p.rings = 0 end
+	else
+		-- Drain power by default amount (1)
+		p.rings = $ - 1
+		if (p.rings < 0) then p.rings = 0 end
+	end
+	if (p.rings < 0) then p.rings = 0 end
+	
+	-- Copied from SRB2 Source
+	/*if (p.rings < 1)
+		p.ammoremovalweapon = p.currentweapon
+		p.ammoremovaltimer = ammoremovaltics -- 2*TICRATE
+		
+		if (p.powers[power] > 0)
+			p.powers[power] = $ - 1
+			p.ammoremoval = 2
+		else
+			p.ammoremoval = 1
+		end
+	else
+		p.rings = $ - 1
+	end*/
+end
 
 addHook("JumpSpecial", function(p)
 	if G_IsRolloutGametype() then
@@ -139,11 +189,11 @@ addHook("JumpSpecial", function(p)
 					mo.rock.rkabilitytics = (3*TICRATE)/4
 					p.powers[pw_flashing] = TICRATE/3
 					p.powers[pw_nocontrol] = TICRATE/2
-					P_InstaThrust(mo.rock, mo.angle, p.normalspeed/2)
+					P_InstaThrust(mo.rock, mo.angle, 3*p.normalspeed/5) -- Thrust forward
 					local zDashfactor = 5*FRACUNIT
-					if (mo.rock.eflags & MFE_UNDERWATER) then zDashfactor = $ / 2 end
+					if (mo.rock.eflags & MFE_UNDERWATER) then zDashfactor = $ / 2 end -- Underwater? Half height
+					zDashfactor = $ * P_MobjFlip(mo) -- Reverse gravity check
 					P_SetObjectMomZ(mo.rock, zDashfactor, true)
-
 				elseif (p.currentweapon == WEP_AUTO) -- Automatic Ring
 				and (p.ringweapons & RW_AUTO) -- Weapon ring able to be fired
 				and (p.powers[pw_automaticring] > 0) -- Player has Auto rings to spare?
@@ -275,10 +325,8 @@ addHook("MobjDeath", function(mo)
 			mo.flags = $ & ~(MF_SOLID|MF_SHOOTABLE)
 			mo.flags = $ | (MF_NOBLOCKMAP|MF_NOCLIP|MF_NOCLIPHEIGHT|MF_NOGRAVITY)
 
-			if not p.bot and not p.spectator and (p.lives ~= INFLIVES) and G_GametypeUsesLives()
-				if not (p.pflags & PF_FINISHED)
-					p.lives = $ - 1
-				end
+			if not p.bot and not p.spectator and (p.lives ~= INFLIVES) and G_GametypeUsesLives() then
+				if not (p.pflags & PF_FINISHED) then p.lives = $ - 1 end
 			end
 			
 			mo.fuse = TICRATE -- NEEDS to be set to have the player visible on death.

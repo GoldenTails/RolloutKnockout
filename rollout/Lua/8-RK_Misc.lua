@@ -160,8 +160,18 @@ RK.hud.game = function(v, p)
 		local pcolor = v.getColormap(TC_DEFAULT, p.skincolor)
 		
 		-- Trim the characters to a Max of 8 characters.
-		if pname and string.len(pname) >= 8
-			pname = string.sub($, 1, 8)
+		if pname and (string.len(pname) >= 8) then pname = string.sub($, 1, 8) end
+
+		-- Cooldown meter
+		if (p.weapondelay-2 > 0)
+			local cooldownPercentage = (((p.weapondelay-2) * 17) / 100)
+			if (leveltime&1)
+				v.drawFill(rkhud.x+39, rkhud.y+7, cooldownPercentage, 1, 178)
+				v.drawFill(rkhud.x+38, rkhud.y+8, cooldownPercentage, 1, 178)
+			else
+				v.drawFill(rkhud.x+39, rkhud.y+7, cooldownPercentage, 1, 180)
+				v.drawFill(rkhud.x+38, rkhud.y+8, cooldownPercentage, 1, 180)
+			end
 		end
 
 		-- Player Hud Graphic
@@ -169,7 +179,7 @@ RK.hud.game = function(v, p)
 				rkhud.y - 8 ,
 				rkhud.full,
 				vflags, pcolor)
-		
+
 		-- Draw the Player Portrait
 		v.drawScaled((rkhud.x+17)*FRACUNIT, 
 					(rkhud.y+15)*FRACUNIT,
@@ -213,7 +223,11 @@ RK.hud.game = function(v, p)
 			v.drawString(rkhud.x + 60, rkhud.y - 4, "NaN", vflags|V_ALLOWLOWERCASE, "right")
 		end
 		v.drawString(rkhud.x + 60, rkhud.y - 4, "%", vflags, "left") -- "Percent" character
-		v.drawString(rkhud.x + 37, rkhud.y + 7, pname, vflags|V_ALLOWLOWERCASE, "small-thin") -- Player Name
+		v.drawString(rkhud.x + 39, rkhud.y + 14, pname, vflags|V_YELLOWMAP|V_ALLOWLOWERCASE, "thin") -- Player Name
+		if (p.weapondelay-2 > 0) and not (leveltime%2) then
+			local text = "\x86"..G_TicsToSeconds(p.weapondelay-2).."."..G_TicsToCentiseconds(p.weapondelay-2)
+			v.drawString(rkhud.x+43,rkhud.y+6,text,vflags|V_HUDTRANS,"small-thin")
+		end
 	else
 		RK.hud.gameSET(v, p, RK.game.exiting.ticker)
 	end
@@ -301,9 +315,7 @@ RK.hud.scores = function(v)
 			local pcolor = v.getColormap(TC_DEFAULT, p.skincolor)
 			
 			-- Trim the characters to a Max of 12 characters.
-			if pname and string.len(pname) >= 12
-				pname = string.sub($, 1, 12)
-			end
+			if pname and (string.len(pname) >= 12) then pname = string.sub($, 1, 12) end
 
 			if (#RK.ptable.s <= 8) then -- Less than 8 players
 				v.drawString(offset.x, vsize.y/6 + (i-1)*70, i, vflags) -- Player node number

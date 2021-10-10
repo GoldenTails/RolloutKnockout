@@ -83,6 +83,12 @@ addHook("ThinkFrame", do
 				S_FadeOutStopMusic(MUSICRATE)
 			elseif (RK.game.exiting.ticker >= TICRATE) then -- Also extend the p.exiting timer by another second
 				for p in players.iterate do
+					if not p.mo then continue end
+					if p.mo.rock and p.mo.rock.lastbumper then 
+						p.mo.rock.lastbumpertics = 0
+						p.mo.rock.lastbumper = nil 
+					end
+					
 					if p.exiting then continue end -- Already exiting? Skip
 					p.exiting = 3*TICRATE-1
 				end

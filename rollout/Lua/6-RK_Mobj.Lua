@@ -233,7 +233,7 @@ addHook("MobjThinker", function(mo)
 				and not (leveltime%2) then
 					mo.color = mo.lastbumper.color
 				else
-					mo.color = mo.target.color 	-- Otherwise, set your color to your target
+					mo.color = mo.target.color 	-- All else, set your color to your target
 				end
 			end
 			
@@ -278,6 +278,14 @@ addHook("MobjThinker", function(mo)
 							RK.mobj.spawnArrow(mo, closestmo, 512*FRACUNIT)
 						end
 					end
+				end
+				
+				if (mo.target.player.weapondelay == 3) then -- Last tic before restoring dash abolity
+					local g = P_SpawnGhostMobj(mo)
+					g.color = mo.target.color
+					g.destscale = 4*FRACUNIT
+					g.scalespeed = FRACUNIT/(2*TICRATE/3)
+					S_StartSound(mo, sfx_s3k8c, mo.target.player)
 				end
 			end
 			
@@ -324,7 +332,10 @@ addHook("MobjThinker", function(mo)
 						orb2.scalespeed = orb1.scalespeed
 					end
 				else*/
-					if not P_IsObjectOnGround(mo) and ((leveltime%3) == 0) then P_SpawnGhostMobj(mo) end -- Default dashing.
+					if not P_IsObjectOnGround(mo) and not (leveltime%3) then 
+						local g = P_SpawnGhostMobj(mo) 
+						g.color = mo.target.color
+					end -- Default dashing.
 				--end
 			else
 				mo.rkability = 0
