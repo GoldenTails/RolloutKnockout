@@ -1,0 +1,48 @@
+#"freeslotting"
+FREESLOT
+S_INVISSPRING
+S_INVISSPRING2
+MT_INVISSPRING
+
+#"objdef"
+Object MT_INVISSPRING
+#$Name Invisible Yellow Spring
+#$Sprite S_NONE
+#$Category Forest Core
+MapThingNum = 553
+SpawnState = S_INVISSPRING
+SpawnHealth = 1000
+SeeState = S_INVISSPRING2
+SeeSound = sfx_None
+ReactionTime = 0
+AttackSound = sfx_None
+PainState = S_NULL
+PainChance = 0
+PainSound = sfx_s3k87
+MeleeState = S_NULL
+MissileState = S_NULL
+DeathState = S_NULL
+XDeathState = S_NULL
+DeathSound = sfx_None
+Speed = 0
+Radius = 20*FRACUNIT
+Height = 16*FRACUNIT
+DispOffset = 0
+Mass = 20*FRACUNIT
+Damage = 0
+ActiveSound = sfx_None
+Flags = MF_SOLID|MF_SPRING
+RaiseState = S_INVISSPRING2
+
+State S_INVISSPRING
+SpriteName = NULL
+SpriteFrame = A
+Duration = -1
+Next = S_NULL
+
+State S_INVISSPRING2
+SpriteName = NULL
+SpriteFrame = A
+Duration = 4
+Action = A_Pain
+Next = S_INVISSPRING

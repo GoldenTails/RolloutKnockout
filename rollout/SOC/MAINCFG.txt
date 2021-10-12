@@ -23,7 +23,7 @@ SelectHeading = Big Maps
 NextLevel = R3
 
 Level R3
-LevelName = Pristine Waters
+LevelName = Forest Core
 Music = GFZ2
 TypeOfLevel = ROLLOUT
 SkyNum = 40
