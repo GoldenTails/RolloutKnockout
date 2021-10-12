@@ -223,7 +223,7 @@ RK.hud.game = function(v, p)
 			v.drawString(rkhud.x + 60, rkhud.y - 4, "NaN", vflags|V_ALLOWLOWERCASE, "right")
 		end
 		v.drawString(rkhud.x + 60, rkhud.y - 4, "%", vflags, "left") -- "Percent" character
-		v.drawString(rkhud.x + 39, rkhud.y + 14, pname, vflags|V_YELLOWMAP|V_ALLOWLOWERCASE, "thin") -- Player Name
+		v.drawString(rkhud.x + 39, rkhud.y + 14, pname, vflags|V_ALLOWLOWERCASE, "thin") -- Player Name
 		if (p.weapondelay-2 > 0) and not (leveltime%2) then
 			local text = "\x86"..G_TicsToSeconds(p.weapondelay-2).."."..G_TicsToCentiseconds(p.weapondelay-2)
 			v.drawString(rkhud.x+43,rkhud.y+6,text,vflags|V_HUDTRANS,"small-thin")
@@ -330,7 +330,11 @@ RK.hud.scores = function(v)
 									FRACUNIT/2, pface,
 									vflags, pcolor) -- Player Portrait w/ current player color
 				end
-				v.drawString(offset.x + 136, vsize.y/6 + (i-1)*70, pname, vflags|V_ALLOWLOWERCASE) -- Player Name
+				if (p == consoleplayer) then
+					v.drawString(offset.x + 136, vsize.y/6 + (i-1)*70, pname, vflags|V_YELLOWMAP|V_ALLOWLOWERCASE) -- Player Name (Yellow - You)
+				else
+					v.drawString(offset.x + 136, vsize.y/6 + (i-1)*70, pname, vflags|V_ALLOWLOWERCASE) -- Player Name
+				end
 				if mo.rock and mo.rock.valid then
 					v.drawString(8*offset.x + offset.xh, vsize.y/6 + (i-1)*70, p.mo.rock.percent.."%", vflags, "right") -- Rock Damage
 				else
@@ -358,7 +362,11 @@ RK.hud.scores = function(v)
 										FRACUNIT/3, pface,
 										vflags, pcolor) -- Player Portrait w/ current player color
 					end
-					v.drawString(offset.xh + 136, vsize.y/6 + (i-1)*70, pname, vflags|V_ALLOWLOWERCASE, "thin") -- Player Name
+					if (p == consoleplayer) then
+						v.drawString(offset.xh + 136, vsize.y/6 + (i-1)*70, pname, vflags|V_YELLOWMAP|V_ALLOWLOWERCASE, "thin") -- Player Name (Yellow - You)
+					else
+						v.drawString(offset.xh + 136, vsize.y/6 + (i-1)*70, pname, vflags|V_ALLOWLOWERCASE, "thin") -- Player Name
+					end
 					if mo.rock and mo.rock.valid then
 						v.drawString((9*offset.x)/2, vsize.y/6 + (i-1)*70, p.mo.rock.percent.."%", vflags, "thin-right") -- Rock Damage
 					else

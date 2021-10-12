@@ -506,7 +506,7 @@ addHook("MobjCollide", function(thing, tmthing)
 		
 		if (thing.type == tmthing.type) then
 			thing.bumpcount = $ + 1
-			thing.bumpcounttics = TICRATE/2
+			thing.bumpcounttics = TICRATE/3
 		end
 		
 		if thing.target and thing.target.valid
@@ -518,13 +518,13 @@ addHook("MobjCollide", function(thing, tmthing)
 			and thing.bumpcount and (thing.bumpcount > 15) -- And the bumpcount greater than 15 bumps?
 				p.playerstate = PST_REBORN -- respawn
 			elseif thing.bumpcount and (thing.bumpcount > TICRATE) -- Bumpcount is greater than 70 bumps
-				local aang = R_PointToAngle2(thing.x, thing.y, tmthing.x, tmthing.y) -- Get the adjusted angle
+				local aang = R_PointToAngle2(tmthing.x, tmthing.y, thing.x, thing.y) -- Get the adjusted angle
 				--p.playerstate = PST_REBORN -- Hack respawn
 				/*P_TeleportMove(thing, thing.x - FixedMul(cos(aang), thing.radius),
 										thing.y - FixedMul(sin(aang), thing.radius), 
 										thing.z)*/
-				P_TeleportMove(tmthing, tmthing.x - FixedMul(cos(aang+ANGLE_180), tmthing.radius),
-										tmthing.y - FixedMul(sin(aang+ANGLE_180), tmthing.radius), 
+				P_TeleportMove(tmthing, tmthing.x - FixedMul(cos(aang), 3*tmthing.radius/2),
+										tmthing.y - FixedMul(sin(aang), 3*tmthing.radius/2), 
 										tmthing.z)
 			end
 		end
