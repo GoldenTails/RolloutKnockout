@@ -91,11 +91,8 @@ addHook("PreThinkFrame", do
 			if (p.weapondelay <= 2) then p.weapondelay = 2 end
 			
 			local cmd = p.cmd
-			if (cmd.buttons & BT_CUSTOM1)
-			or (cmd.buttons & BT_CUSTOM2)
-			or (cmd.buttons & BT_CUSTOM3) then
-				cmd.buttons = $ & ~(BT_CUSTOM1|BT_CUSTOM2|BT_CUSTOM3)
-			end
+			-- Ignore anything but Jump input
+			cmd.buttons = $ & BT_JUMP
 		end
 	end
 end)
