@@ -1,1 +1,1 @@
-C:\msys64\msys2_shell.cmd -mingw32 -here buildRollout.sh
+C:\msys64\msys2_shell.cmd -mingw32 -here buildRollout.sh -release
