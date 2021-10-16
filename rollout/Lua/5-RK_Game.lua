@@ -84,9 +84,11 @@ addHook("ThinkFrame", do
 			elseif (RK.game.exiting.ticker >= TICRATE) then -- Also extend the p.exiting timer by another second
 				for p in players.iterate do
 					if not p.mo then continue end
-					if p.mo.rock and p.mo.rock.lastbumper then 
-						p.mo.rock.lastbumpertics = 0
-						p.mo.rock.lastbumper = nil 
+					local rock = p.mo.rock
+					if rock and rock.valid
+					and rock.lastbumper then 
+						rock.lastbumpertics = 0
+						rock.lastbumper = nil 
 					end
 					
 					if p.exiting then continue end -- Already exiting? Skip
@@ -99,10 +101,10 @@ end)
 
 -- Reset the exiting variables.
 addHook("MapChange", function(mapnum) -- This goes unused
-	if RK.game.exiting.var or RK.game.exiting.ticker then
+	--if RK.game.exiting.var or RK.game.exiting.ticker then
 		RK.game.exiting.var = false
 		RK.game.exiting.ticker = 0
-	end
+	--end
 end)
 
 -- HurtMsg hook to replace the default "x's tagging hand killed y" Message

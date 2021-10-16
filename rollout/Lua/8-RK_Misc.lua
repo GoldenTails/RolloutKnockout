@@ -43,10 +43,8 @@ end
 
 RK.hud.obj.Think = function()
 	for k, hobj in ipairs(RK.hud.obj.t) do
-		if hobj.fuse and (hobj.fuse > 0) then
-			hobj.fuse = $ - 1
-			if (hobj.fuse == 1) then table.remove(RK.hud.obj.t, k) end
-		end
+		if hobj.fuse and (hobj.fuse > 0) then hobj.fuse = $ - 1 end
+		if (hobj.fuse <= 1) then table.remove(RK.hud.obj.t, k) end
 	end
 end
 
@@ -120,7 +118,10 @@ RK.hud.gameSET = function(v, p, ticker)
 	RK.hud.obj.Think()
 	if (#RK.hud.obj.t > 0) then
 		for _, hobj in ipairs(RK.hud.obj.t) do
-			v.draw(hobj.x,hobj.y, hobj.patch[4-(hobj.fuse/3)], hobj.f, hobj.c)
+			local pticker = 4-(hobj.fuse/3)
+			if hobj.patch[pticker] and hobj.patch[pticker].valid then
+				v.draw(hobj.x,hobj.y, hobj.patch[pticker], hobj.f, hobj.c)
+			end
 		end
 	end
 	
