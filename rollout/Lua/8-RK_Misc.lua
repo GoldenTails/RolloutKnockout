@@ -143,100 +143,130 @@ RK.hud.game = function(v, p)
 	if not p or not p.valid then return end
 	if not G_IsRolloutGametype() then return end
 
-	if not RK.game.exiting.var then
-		local vsize = { x = v.width(), y = v.height() }
-		local rkhud = { x = hudinfo[HUD_LIVES].x,
-						y = hudinfo[HUD_LIVES].y,
-						full = v.cachePatch("RKLA75"),
-						high = v.cachePatch("RKLH"),
-						med = v.cachePatch("RKLM"),
-						low = v.cachePatch("RKLL")
-						}
-		local vflags = V_SNAPTOLEFT|V_SNAPTOBOTTOM|V_PERPLAYER
-		if p.spectator then vflags = $|V_HUDTRANSHALF end
-		local pname = p.name
-		local mo = p.mo or p.realmo
-		if not mo then return end -- Stop here if `mo` is not found
-		local pface, pface2 = v.getSprite2Patch(mo.skin, SPR2_SIGN, 0, 0), v.getSprite2Patch(mo.skin, SPR2_LIFE, 0, 0) -- Get this player's icon!
-		local pcolor = v.getColormap(TC_DEFAULT, p.skincolor)
-		
-		-- Trim the characters to a Max of 8 characters.
-		if pname and (string.len(pname) >= 8) then pname = string.sub($, 1, 8) end
+	if RK.game.exiting.var then
+		RK.hud.gameSET(v, p, RK.game.exiting.ticker+1)
+		return -- Don't process anything else
+	end
 
-		-- Cooldown meter
-		if (p.weapondelay-2 > 0)
-			local cooldownPercentage = (((p.weapondelay-2) * 17) / 100)
-			if (leveltime&1)
-				v.drawFill(rkhud.x+39, rkhud.y+7, cooldownPercentage, 1, 178)
-				v.drawFill(rkhud.x+38, rkhud.y+8, cooldownPercentage, 1, 178)
-			else
-				v.drawFill(rkhud.x+39, rkhud.y+7, cooldownPercentage, 1, 180)
-				v.drawFill(rkhud.x+38, rkhud.y+8, cooldownPercentage, 1, 180)
-			end
+	local vsize = { x = v.width(), y = v.height() }
+	local rkhud = { x = hudinfo[HUD_LIVES].x,
+					y = hudinfo[HUD_LIVES].y,
+					f = hudinfo[HUD_LIVES].f,
+					full = v.cachePatch("RKLA75"),
+					high = v.cachePatch("RKLH"),
+					med = v.cachePatch("RKLM"),
+					low = v.cachePatch("RKLL")
+					}
+	local vflags = rkhud.f | V_PERPLAYER
+	if p.spectator then vflags = $|V_HUDTRANSHALF end
+	local pname = p.name
+	local mo = p.mo or p.realmo
+	if not mo then return end -- Stop here if `mo` is not found
+	local pface, pface2 = v.getSprite2Patch(mo.skin, SPR2_SIGN, 0, 0), v.getSprite2Patch(mo.skin, SPR2_LIFE, 0, 0) -- Get this player's icon!
+	local pcolor = v.getColormap(TC_DEFAULT, p.skincolor)
+	
+	-- Trim the characters to a Max of 8 characters.
+	if pname and (string.len(pname) >= 8) then pname = string.sub($, 1, 8) end
+
+	-- Cooldown meter
+	if (p.weapondelay-2 > 0)
+		local cooldownPercentage = (((p.weapondelay-2) * 17) / 100)
+		for i = 1, 3 do
+			v.drawFill((rkhud.x+41)-i, (rkhud.y+6)+i, 
+						cooldownPercentage, 1, 
+						(leveltime&1) and 178|vflags or 180|vflags)
 		end
+	end
 
-		-- Player Hud Graphic
-		v.draw(rkhud.x,
-				rkhud.y - 8 ,
-				rkhud.full,
+	-- Player Hud Graphic
+	v.draw(rkhud.x,
+			rkhud.y - 8 ,
+			rkhud.full,
+			vflags, pcolor)
+
+	-- Draw the Player Portrait
+	v.drawScaled((rkhud.x+17)*FRACUNIT, 
+				(rkhud.y+15)*FRACUNIT,
+				3*FRACUNIT/4,
+				pface, 
 				vflags, pcolor)
-
-		-- Draw the Player Portrait
-		v.drawScaled((rkhud.x+17)*FRACUNIT, 
-					(rkhud.y+15)*FRACUNIT,
-					3*FRACUNIT/4,
-					pface, 
-					vflags, pcolor)
-		
-		-- Stock icon
-		if G_GametypeUsesLives() and (p.lives > 0)
-			if (p.lives < 5) -- Lives count is less than 5
-				for i = 0, p.lives-1 do
-					v.drawScaled((rkhud.x + 43 + (i*11))*FRACUNIT, 
-								(rkhud.y - 10)*FRACUNIT,
-								FRACUNIT/2, 
-								pface2, 
-								vflags, pcolor)
-				end
-			else -- Lives count is 5 or more
-				-- [icon] x 5
-				v.drawScaled((rkhud.x + 43)*FRACUNIT, 
+	
+	-- Stock icon
+	if G_GametypeUsesLives() and (p.lives > 0)
+		if (p.lives < 5) -- Lives count is less than 5
+			for i = 0, p.lives-1 do
+				v.drawScaled((rkhud.x + 43 + (i*11))*FRACUNIT, 
 							(rkhud.y - 10)*FRACUNIT,
 							FRACUNIT/2, 
 							pface2, 
 							vflags, pcolor)
-				v.drawString((rkhud.x + 54),
-							(rkhud.y - 12), "x", 
-							vflags|V_ALLOWLOWERCASE, "small-right")
-				v.drawString((rkhud.x + 56),
-							(rkhud.y - 16), p.lives, 
-							vflags|V_ALLOWLOWERCASE, "left")
+			end
+		else -- Lives count is 5 or more
+			-- [icon] x 5
+			v.drawScaled((rkhud.x + 43)*FRACUNIT, 
+						(rkhud.y - 10)*FRACUNIT,
+						FRACUNIT/2, 
+						pface2, 
+						vflags, pcolor)
+			v.drawString((rkhud.x + 54),
+						(rkhud.y - 12), "x", 
+						vflags|V_ALLOWLOWERCASE, "small-right")
+			v.drawString((rkhud.x + 56),
+						(rkhud.y - 16), p.lives, 
+						vflags|V_ALLOWLOWERCASE, "left")
+		end
+	end
+	
+	-- Rock Percentage or NaN
+	if mo and mo.valid and mo.rock and mo.rock.valid
+		local rkhrandtics = mo.rock.bumpcounttics and mo.rock.bumpcounttics/4 or 0
+		local rkhrand = { x = (rkhrandtics > 0) and v.RandomRange(-1, 1) or 0, 
+						y = (rkhrandtics > 0) and v.RandomRange(-1, 1) or 0 }
+		v.drawString(rkhrand.x + rkhud.x + 60, rkhrand.y + rkhud.y - 4, mo.rock.percent, vflags, "right")
+	else
+		v.drawString(rkhud.x + 60, rkhud.y - 4, "NaN", vflags|V_ALLOWLOWERCASE, "right")
+	end
+	v.drawString(rkhud.x + 60, rkhud.y - 4, "%", vflags, "left") -- "Percent" character
+	v.drawString(rkhud.x + 39, rkhud.y + 15, pname, vflags|V_ALLOWLOWERCASE, "thin") -- Player Name
+	
+	-- Cooldown timer
+	if (p.weapondelay-2 > 0) and not (leveltime%2) then
+		local text = "\x86"..G_TicsToSeconds(p.weapondelay-2).."."..G_TicsToCentiseconds(p.weapondelay-2)
+		v.drawString(rkhud.x+42,rkhud.y+7,text,vflags|V_HUDTRANS,"small-thin")
+	end
+	
+	if G_GametypeUsesLives() then -- Lives-based gamemode
+		local text, bval = {}, 0
+		local pregame = RK.game.pregame
+		if not pregame.warped then -- Display some text if we haven't "warped" to a new map yet.
+			if not pregame.ticker then
+				table.insert(text, "Freeplay mode.")
+				table.insert(text, "Waiting for players to join...")
+				bval = FixedMul(sin(FixedAngle(FRACUNIT*(4*leveltime%360))), 8)
+			else
+				local num = max(0, G_TicsToSeconds(4*TICRATE - pregame.ticker))
+				table.insert(text, "Enough players have joined!")
+				table.insert(text, "Reloading curent map in \x82" + num + "\x80 seconds.")
 			end
 		end
 		
-		-- Rock Percentage or NaN
-		if mo and mo.valid and mo.rock and mo.rock.valid
-			local rkhrandtics = mo.rock.bumpcounttics and mo.rock.bumpcounttics/4 or 0
-			local rkhrand = { x = (rkhrandtics > 0) and v.RandomRange(-1, 1) or 0, 
-							y = (rkhrandtics > 0) and v.RandomRange(-1, 1) or 0 }
-			v.drawString(rkhrand.x + rkhud.x + 60, rkhrand.y + rkhud.y - 4, mo.rock.percent, vflags, "right")
-		else
-			v.drawString(rkhud.x + 60, rkhud.y - 4, "NaN", vflags|V_ALLOWLOWERCASE, "right")
+		if #text then
+			for i = 1, #text do
+				local w = v.stringWidth(text[i])
+				v.drawString(160-(w/2),
+							40+(8*(i-1)) + bval,
+							text[i])
+			end
 		end
-		v.drawString(rkhud.x + 60, rkhud.y - 4, "%", vflags, "left") -- "Percent" character
-		v.drawString(rkhud.x + 39, rkhud.y + 14, pname, vflags|V_ALLOWLOWERCASE, "thin") -- Player Name
-		if (p.weapondelay-2 > 0) and not (leveltime%2) then
-			local text = "\x86"..G_TicsToSeconds(p.weapondelay-2).."."..G_TicsToCentiseconds(p.weapondelay-2)
-			v.drawString(rkhud.x+43,rkhud.y+6,text,vflags|V_HUDTRANS,"small-thin")
-		end
-	else
-		RK.hud.gameSET(v, p, RK.game.exiting.ticker)
 	end
 end
 
 RK.hud.scores = function(v)
 	if not v then return end
-	if RK.game.exiting.var then return end
+	if RK.game.exiting.var then 
+		RK.hud.gameSET(v, consoleplayer, RK.game.exiting.ticker+1)
+		return -- Don't process anything else
+	end
 	
 	if G_IsRolloutGametype() then
 		hud.disable("rankings")
@@ -311,6 +341,7 @@ RK.hud.scores = function(v)
 		for i = 1, #RK.ptable.s do
 			local p = RK.ptable.s[i] -- We've come full circle now.
 			local mo = p.mo or p.realmo
+			if not p.mo then continue end -- Something has gone horribly wrong up until this point
 			local pname = p.name
 			local pface = v.getSprite2Patch(mo.skin, SPR2_XTRA, 0, 0) -- Get this player's icon!
 			local pcolor = v.getColormap(TC_DEFAULT, p.skincolor)

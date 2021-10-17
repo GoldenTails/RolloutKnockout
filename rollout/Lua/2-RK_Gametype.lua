@@ -19,7 +19,7 @@ table.insert(RK.gt, {
 	name = "Rollout Knockout (Time)",
 	identifier = "ROLLOUT_TIME", -- GT_ROLLOUT_TIME
 	typeoflevel = TOL_ROLLOUT,
-	rules = GTR_SPECTATORS|GTR_HURTMESSAGES|GTR_NOSPECTATORSPAWN|GTR_DEATHMATCHSTARTS|GTR_TIMELIMIT,
+	rules = GTR_SPECTATORS|GTR_HURTMESSAGES|GTR_DEATHMATCHSTARTS|GTR_TIMELIMIT,
 	intermissiontype = int_match,
 	rankingtype = GT_MATCH,
 	defaulttimelimit = 5,
@@ -31,10 +31,10 @@ table.insert(RK.gt, {
 	name = "Rollout Knockout (Stock)",
 	identifier = "ROLLOUT_STOCK", -- GT_ROLLOUT_STOCK
 	typeoflevel = TOL_ROLLOUT,
-	rules = GTR_SPECTATORS|GTR_HURTMESSAGES|GTR_NOSPECTATORSPAWN|GTR_DEATHMATCHSTARTS|GTR_TIMELIMIT|GTR_LIVES,
+	rules = GTR_SPECTATORS|GTR_HURTMESSAGES|GTR_DEATHMATCHSTARTS|GTR_TIMELIMIT|GTR_LIVES,
 	intermissiontype = int_match,
 	rankingtype = GT_MATCH,
-	defaulttimelimit = 8,
+	defaulttimelimit = 0,
 	headercolor = 148,
 	description = "You and your opponents are all on rocks! Knock everyone off the stage and come out on top! Super Bash Sisters style!"
 })

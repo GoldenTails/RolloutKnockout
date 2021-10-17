@@ -9,21 +9,17 @@
 --
 
 RK.game = {}
+RK.game.pregame = { var = true, ticker = 0, warped = false }
 RK.game.exiting = {}
-RK.game.exiting = { var = 0, ticker = 0 }
+RK.game.exiting = { var = false, ticker = 0 }
 
 RK.game.countInGamePlayers = function()
 	local playeringame = 0
 	for p in players.iterate
-		--if p.spectator then continue end -- We're a spectator. Skip.
+		if p.spectator then continue end -- We're a spectator. Skip.
 		if not p.realmo then continue end -- Player does not have a mo object. Skip.
 		if p.bot then continue end  -- Player is a bot. Skip.
-		if (p.lives <= 0) then continue end -- Out of lives
-		if G_GametypeUsesLives() -- Rollout gametype uses lives?
-		and p.spectatetics
-		and (p.spectatetics > cv_rkspectatoridle.value*TICRATE*60) then -- Spectator has been idle for X minutes or more
-			continue -- Skip counting this player, this person isn't 'playing'
-		end
+		if (gametyperules & GTR_LIVES) and (p.lives <= 0) then continue end -- Out of lives
 		playeringame = $ + 1
 	end
 	return playeringame
@@ -64,23 +60,74 @@ end
 
 addHook("ThinkFrame", do
 	if G_IsRolloutGametype() then
-		if not RK.game.exiting.var then RK.game.exiting.ticker = 0 end
+		local timelimit = CV_FindVar("timelimit").value
+			
+		if not RK.game.exiting.var then
+			RK.game.exiting.ticker = 0
+		else
+			RK.game.exiting.ticker = $ + 1
+		end
 		
+		if not RK.game.pregame.warped then -- Did not warp to an in-game map yet.
+			if RK.game.pregame.var then -- Still pregame?
+				RK.game.pregame.ticker = 0 -- Keep the value reset
+			else -- Otherwise, if we're no longer in the pregame...
+				if (RK.game.pregame.ticker == 4*TICRATE) then -- Current pregame ticker value is more than 4 seconds
+					RK.game.pregame.warped = true -- Set the 'warped' variable so this doesn't trigger more than once.
+					RK.game.pregame.ticker = 0 -- Reset the pregame ticker value
+					G_SetCustomExitVars(gamemap, 1) -- Nextmap will be the same map, skip stats
+					G_ExitLevel() -- Reload!
+					return -- Don't process anything else
+				end
+				RK.game.pregame.ticker = $ + 1 -- Increment the value if no longer in the pregame.
+				return -- Don't process anything else
+			end
+		else
+			-- OK so, what if we warped, but the total player count went back down to 1?
+			-- How do we mitigate against an infinite loop?
+			if (RK.game.countInGamePlayers() <= 1) then
+				RK.game.pregame.warped = false
+				RK.game.pregame.var = true
+				S_StartSound(nil, sfx_s3kb2, consoleplayer) -- Play a little jingle [Failure]
+				COM_BufInsertText(nil, "timelimit 0") -- Set the timer!
+				return -- Don't process anything else
+			end
+			
+			-- If the default timer isn't set...
+			if cv_rkdefaulttime.value and not timelimit then
+				COM_BufInsertText(nil, "timelimit 8") -- Set the timer!
+			end
+		end
+		
+		-- Timelimit shenanigans
 		if (gametyperules & GTR_TIMELIMIT) then -- Gametype has a timelimit
-			local timelimit = CV_FindVar("timelimit").value * TICRATE * 60 -- 'Timelimit' console variable
-			if timelimit and (leveltime > (timelimit - 4*TICRATE))  -- 4 seconds before 'Timelimit' console variable
+			if timelimit and (leveltime > (((timelimit*TICRATE)*60) - 4*TICRATE))  -- 4 seconds before 'Timelimit' console variable
 			and not RK.game.exiting.ticker then -- Not already exiting
 				RK.game.exiting.var = true -- Start the exit process
 			end
 		end
 		
-		if (RK.game.countTotalPlayers() > 1) -- Number of total players is > 1
-		and (RK.game.countInGamePlayers() == 1) -- And the number of in-game players are 1
-		or RK.game.exiting.var then -- Or if we are already "exiting"...
-			RK.game.exiting.ticker = $ + 1
-			RK.game.exiting.var = true
+		-- Stock (Lives) match shenanigans
+		if (gametyperules & GTR_LIVES) then
+			if RK.game.pregame.var -- Are we in the pregame?
+			and (RK.game.countInGamePlayers() > 1) then -- The number of in-game players are > 1 (Two or more)
+				RK.game.pregame.var = false -- Start the in-game process
+				S_StartSound(nil, sfx_s3k63, consoleplayer) -- Play a little jingle [Checkpoint]
+			elseif not RK.game.pregame.var -- No longer in the pregame?
+			and (RK.game.countTotalPlayers() > 1) -- Number of total players is > 1 (Two or more)
+			and (RK.game.countInGamePlayers() == 1) -- And the number of in-game players are 1
+			and not RK.game.exiting.ticker then -- Not already exiting
+				RK.game.exiting.var = true -- Start the exit process
+			end
+		end
+		
+		if RK.game.exiting.var then -- Are we already "exiting"?
 			if (RK.game.exiting.ticker == 1) then -- Music fade
 				S_FadeOutStopMusic(MUSICRATE)
+				for p in players.iterate do
+					if p.powers[pw_nocontrol] then continue end
+					p.powers[pw_nocontrol] = 4*TICRATE
+				end
 			elseif (RK.game.exiting.ticker >= TICRATE) then -- Also extend the p.exiting timer by another second
 				for p in players.iterate do
 					if not p.mo then continue end
@@ -100,11 +147,15 @@ addHook("ThinkFrame", do
 end)
 
 -- Reset the exiting variables.
-addHook("MapChange", function(mapnum) -- This goes unused
-	--if RK.game.exiting.var or RK.game.exiting.ticker then
-		RK.game.exiting.var = false
-		RK.game.exiting.ticker = 0
-	--end
+addHook("MapChange", function(mapnum) -- mapnum goes unused
+	RK.game.exiting.var = false
+	RK.game.exiting.ticker = 0
+	RK.game.pregame.ticker = 0
+end)
+addHook("IntermissionThinker", do
+	RK.game.exiting.var = false
+	RK.game.exiting.ticker = 0
+	RK.game.pregame.ticker = 0
 end)
 
 -- HurtMsg hook to replace the default "x's tagging hand killed y" Message
@@ -126,8 +177,8 @@ addHook("HurtMsg", function(p, i, s)
 end)
 
 addHook("TeamSwitch", function(p, team, fromspectators)
-	if G_IsRolloutGametype() and G_GametypeUsesLives() 
-	and (gamestate == GS_LEVEL) then
+	if G_IsRolloutGametype() and (gamestate == GS_LEVEL) 
+	and G_GametypeUsesLives() then
 		if p and p.valid then
 			-- Cheeky check for those that die, become a spectator, and attempt to re-enter the game...
 			if fromspectators then
@@ -148,5 +199,6 @@ addHook("TeamSwitch", function(p, team, fromspectators)
 end)
 
 addHook("NetVars", function(net)
-	RK.game.exiting = net(RK.game.exiting)
+	RK.game.exiting = net($)
+	RK.game.pregame = net($)
 end)

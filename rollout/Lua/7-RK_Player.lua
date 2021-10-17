@@ -85,21 +85,20 @@ RK.plyr.deathThink2 = function(p)
 end
 
 addHook("PreThinkFrame", do
-	for p in players.iterate
-		if G_IsRolloutGametype() 
+	if G_IsRolloutGametype()
+		for p in players.iterate
 			-- Do not fire rings. Ever.
 			if (p.weapondelay <= 2) then p.weapondelay = 2 end
-			
+
+			if p.spectator then continue end -- Spectating? Then you have normal spectating controls.
 			local cmd = p.cmd
-			-- Ignore anything but Jump input
-			cmd.buttons = $ & BT_JUMP
+			cmd.buttons = $ & BT_JUMP -- Ignore anything but Jump input
 		end
 	end
 end)
 
 addHook("PlayerSpawn", function(player)
 	player.ingametics = 0
-	player.spectatetics = 0
 	
 	local mo = player.mo or player.realmo
 	if G_IsRolloutGametype() and (mo and mo.valid) and not player.spectator then
@@ -305,7 +304,6 @@ end)
 
 addHook("PlayerThink", function(p)
 	if G_IsRolloutGametype() then
-		if p.spectator then p.spectatetics = $ + 1 end
 		if (p.playerstate ~= PST_DEAD) then
 			if (p.playerstate == PST_LIVE) and not p.spectator then p.ingametics = $ + 1 end
 		elseif (p.playerstate == PST_DEAD) then

@@ -22,7 +22,7 @@ end
 
 COM_AddCommand("rk_respawn", RK.cons.Respawn)
 
--- Manually set the lives in RK
+-- Manually set the lives in RK.
 rawset(_G, "cv_rklives", {value = 3}) -- This avoids a console warning. This table gets overwritten.
 cv_rklives = CV_RegisterVar({
 	name = "rk_setlives",
@@ -40,7 +40,7 @@ cv_rklives = CV_RegisterVar({
 	end,
 })
 
--- Manually change your viewing of percentages
+-- Manually change your viewing of percentages.
 rawset(_G, "cv_rkpercentview", CV_RegisterVar({
 	name = "rk_percentview",
 	defaultvalue = 2,
@@ -49,11 +49,12 @@ rawset(_G, "cv_rkpercentview", CV_RegisterVar({
 	func = 0,
 }))
 
--- Set the amount of time (in seconds) spectators can be idle for.
-rawset(_G, "cv_rkspectatoridle", CV_RegisterVar({
-	name = "rk_spectatoridle",
+-- In stock/lives-based game modes, allow the player to have the option to set the default timer for this mode.
+-- This is so lives-based matches don't last forever.
+rawset(_G, "cv_rkdefaulttime", CV_RegisterVar({
+	name = "rk_defaulttime",
 	defaultvalue = 1,
 	flags = CV_SAVE|CV_NETVAR,
-	PossibleValue = {MIN = 1, MAX = 60},
+	PossibleValue = CV_YesNo,
 	func = 0,
 }))
