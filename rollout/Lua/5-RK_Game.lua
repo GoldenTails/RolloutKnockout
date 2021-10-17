@@ -14,15 +14,26 @@ RK.game.exiting = {}
 RK.game.exiting = { var = false, ticker = 0 }
 
 RK.game.countInGamePlayers = function()
-	local playeringame = 0
+	local pcount = 0
 	for p in players.iterate
 		if p.spectator then continue end -- We're a spectator. Skip.
 		if not p.realmo then continue end -- Player does not have a mo object. Skip.
 		if p.bot then continue end  -- Player is a bot. Skip.
 		if (gametyperules & GTR_LIVES) and (p.lives <= 0) then continue end -- Out of lives
-		playeringame = $ + 1
+		pcount = $ + 1
 	end
-	return playeringame
+	return pcount
+end
+
+RK.game.countPlayersWithLives = function()
+	local pcount = 0
+	for p in players.iterate
+		if not p.realmo then continue end -- Player does not have a mo object. Skip.
+		if p.bot then continue end  -- Player is a bot. Skip.
+		if (gametyperules & GTR_LIVES) and (p.lives <= 0) then continue end -- Out of lives
+		pcount = $ + 1
+	end
+	return pcount
 end
 
 RK.game.countTotalTeamPlayers = function(p) -- p 'host' needed too pass variable
@@ -85,7 +96,10 @@ addHook("ThinkFrame", do
 		else
 			-- OK so, what if we warped, but the total player count went back down to 1?
 			-- How do we mitigate against an infinite loop?
-			if (RK.game.countInGamePlayers() <= 1) then
+			if (RK.game.countTotalPlayers() <= 1) -- If the actual player count is 1 or less
+			or ((RK.game.countTotalPlayers() > 1) -- Or if the actual player count is 1 or more
+			and (RK.game.countInGamePlayers() <= 1) -- AND the number of ingame players is 1 or less
+			and (RK.game.countPlayersWithLives() > 1)) then -- But there is more than one player(s) with lives
 				RK.game.pregame.warped = false
 				RK.game.pregame.var = true
 				S_StartSound(nil, sfx_s3kb2, consoleplayer) -- Play a little jingle [Failure]
@@ -116,6 +130,7 @@ addHook("ThinkFrame", do
 			elseif not RK.game.pregame.var -- No longer in the pregame?
 			and (RK.game.countTotalPlayers() > 1) -- Number of total players is > 1 (Two or more)
 			and (RK.game.countInGamePlayers() == 1) -- And the number of in-game players are 1
+			and (RK.game.countPlayersWithLives() == 1) -- AND there is only one in-game player(s) with lives to spare
 			and not RK.game.exiting.ticker then -- Not already exiting
 				RK.game.exiting.var = true -- Start the exit process
 			end
