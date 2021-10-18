@@ -37,7 +37,7 @@ RK.plyr.deathThink1 = function(p)
 		
 		-- We're already doing a number of flashy effects while exiting. 
 		-- Don't process anything else.
-		if RK.game.exiting.var then return end
+		if RK.game.event.ticker then return end
 		
 		-- Flash the screen
 		for px in players.iterate do

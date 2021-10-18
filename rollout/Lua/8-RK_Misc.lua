@@ -143,8 +143,8 @@ RK.hud.game = function(v, p)
 	if not p or not p.valid then return end
 	if not G_IsRolloutGametype() then return end
 
-	if RK.game.exiting.var then
-		RK.hud.gameSET(v, p, RK.game.exiting.ticker+1)
+	if (RK.game.event.state == RKGS_EXIT) then
+		RK.hud.gameSET(v, p, RK.game.event.ticker+1)
 		return -- Don't process anything else
 	end
 
@@ -237,16 +237,16 @@ RK.hud.game = function(v, p)
 	
 	if G_GametypeUsesLives() then -- Lives-based gamemode
 		local text, bval = {}, 0
-		local pregame = RK.game.pregame
+		local event = RK.game.event
 		local vflags2 = V_ALLOWLOWERCASE|V_PERPLAYER
-		if not pregame.warped then -- Display some text if we haven't "warped" to a new map yet.
-			if not pregame.ticker then
+		if event.state and (event.state <= RKGS_PREP) then -- Display some text if we haven't "warped" to a new map yet.
+			if (event.state == RKGS_PRE) then
 				table.insert(text, "Freeplay mode.")
 				table.insert(text, "Waiting for players to join...")
 				bval = FixedMul(sin(FixedAngle(FRACUNIT*(4*leveltime%360))), 4)
 				vflags2 = $ | V_50TRANS
-			else
-				local num = max(0, G_TicsToSeconds(6*TICRATE - pregame.ticker))
+			elseif (event.state == RKGS_PREP) then
+				local num = max(0, G_TicsToSeconds(6*TICRATE - event.ticker))
 				table.insert(text, "Enough players have joined!")
 				table.insert(text, "Reloading curent map in \x82" + num + "\x80 seconds.")
 			end
@@ -266,8 +266,8 @@ end
 
 RK.hud.scores = function(v)
 	if not v then return end
-	if RK.game.exiting.var then 
-		RK.hud.gameSET(v, consoleplayer, RK.game.exiting.ticker+1)
+	if (RK.game.event.state == RKGS_EXIT) then 
+		RK.hud.gameSET(v, consoleplayer, RK.game.event.ticker+1)
 		return -- Don't process anything else
 	end
 	

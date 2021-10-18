@@ -22,7 +22,7 @@ table.insert(RK.gt, {
 	rules = GTR_SPECTATORS|GTR_HURTMESSAGES|GTR_DEATHMATCHSTARTS|GTR_TIMELIMIT,
 	intermissiontype = int_match,
 	rankingtype = GT_MATCH,
-	defaulttimelimit = 5,
+	defaulttimelimit = 0,
 	headercolor = 148,
 	description = "You and your opponents are all on rocks! Knock everyone off the stage and come out on top!"
 })
