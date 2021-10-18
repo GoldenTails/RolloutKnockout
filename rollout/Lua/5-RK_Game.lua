@@ -159,7 +159,7 @@ addHook("ThinkFrame", do
 					if rock and rock.valid
 					and rock.lastbumper then 
 						rock.lastbumpertics = 0
-						rock.lastbumper = nil 
+						rock.lastbumper = nil
 					end
 					
 					if p.exiting then continue end -- Already exiting? Skip
