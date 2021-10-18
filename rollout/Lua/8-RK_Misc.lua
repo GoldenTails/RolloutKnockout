@@ -238,13 +238,15 @@ RK.hud.game = function(v, p)
 	if G_GametypeUsesLives() then -- Lives-based gamemode
 		local text, bval = {}, 0
 		local pregame = RK.game.pregame
+		local vflags2 = V_ALLOWLOWERCASE|V_PERPLAYER
 		if not pregame.warped then -- Display some text if we haven't "warped" to a new map yet.
 			if not pregame.ticker then
 				table.insert(text, "Freeplay mode.")
 				table.insert(text, "Waiting for players to join...")
 				bval = FixedMul(sin(FixedAngle(FRACUNIT*(4*leveltime%360))), 4)
+				vflags2 = $ | V_50TRANS
 			else
-				local num = max(0, G_TicsToSeconds(4*TICRATE - pregame.ticker))
+				local num = max(0, G_TicsToSeconds(6*TICRATE - pregame.ticker))
 				table.insert(text, "Enough players have joined!")
 				table.insert(text, "Reloading curent map in \x82" + num + "\x80 seconds.")
 			end
@@ -256,7 +258,7 @@ RK.hud.game = function(v, p)
 				local w = v.stringWidth(text[i])
 				v.drawString(160-(w/2),
 							92+(8*(i-1)) + bval,
-							text[i], V_50TRANS|V_ALLOWLOWERCASE|V_PERPLAYER)
+							text[i], vflags2)
 			end
 		end
 	end

@@ -13,13 +13,20 @@ RK.game.pregame = { var = true, ticker = 0, warped = false }
 RK.game.exiting = {}
 RK.game.exiting = { var = false, ticker = 0 }
 
+RK.game.countTotalPlayers = function() -- Counts total number of in-game players
+	local totalplayers = 0
+	for p in players.iterate
+		totalplayers = $ + 1
+	end
+	return totalplayers
+end
+
 RK.game.countInGamePlayers = function()
 	local pcount = 0
 	for p in players.iterate
 		if p.spectator then continue end -- We're a spectator. Skip.
 		if not p.realmo then continue end -- Player does not have a mo object. Skip.
 		if p.bot then continue end  -- Player is a bot. Skip.
-		if (gametyperules & GTR_LIVES) and (p.lives <= 0) then continue end -- Out of lives
 		pcount = $ + 1
 	end
 	return pcount
@@ -36,6 +43,17 @@ RK.game.countPlayersWithLives = function()
 	return pcount
 end
 
+RK.game.countSpectators = function()
+	local scount, iscount = 0
+	for p in players.iterate
+		if not p.spectator then continue end -- Not a spectator. Count spectators.
+		scount = $ + 1
+		if (p.spectatortime < 30*TICRATE) then continue end -- Spectator for 30 seconds or less. Skip.
+		iscount = $ + 1
+	end
+	return { scount, iscount }
+end
+
 RK.game.countTotalTeamPlayers = function(p) -- p 'host' needed too pass variable
 	local totalteamplayers = 0
 	for pt in players.iterate
@@ -45,28 +63,6 @@ RK.game.countTotalTeamPlayers = function(p) -- p 'host' needed too pass variable
 		totalteamplayers = $ + 1
 	end
 	return totalteamplayers
-end
-
-/*RK.game.countActiveSpectators = function() -- Self explainitory
-	local actSpec = 0
-	for p in players.iterate
-		if not p.spectator then continue end -- Not a spectator. Skip.
-		if not p.realmo then continue end -- Player does not have a mo object. Skip.
-		if pt.bot then continue end  -- Player is a bot. Skip.
-		
-		-- TODO: If I ever uncomment this, make a check for when a player is a spectator and hasn't *moved* in a period of time.
-		-- Most of that is already here, but checking if a spectator player hasn't pressed a button  for some time isn't here.
-		actSpec = $ + 1
-	end
-	return actSpec
-end*/
-
-RK.game.countTotalPlayers = function() -- Counts total number of in-game players
-	local totalplayers = 0
-	for p in players.iterate
-		totalplayers = $ + 1
-	end
-	return totalplayers
 end
 
 addHook("ThinkFrame", do
@@ -83,7 +79,7 @@ addHook("ThinkFrame", do
 			if RK.game.pregame.var then -- Still pregame?
 				RK.game.pregame.ticker = 0 -- Keep the value reset
 			else -- Otherwise, if we're no longer in the pregame...
-				if (RK.game.pregame.ticker == 4*TICRATE) then -- Current pregame ticker value is more than 4 seconds
+				if (RK.game.pregame.ticker == 6*TICRATE) then -- Current pregame ticker value is more than 4 seconds
 					RK.game.pregame.warped = true -- Set the 'warped' variable so this doesn't trigger more than once.
 					RK.game.pregame.ticker = 0 -- Reset the pregame ticker value
 					G_SetCustomExitVars(gamemap, 1) -- Nextmap will be the same map, skip stats
@@ -96,10 +92,7 @@ addHook("ThinkFrame", do
 		else
 			-- OK so, what if we warped, but the total player count went back down to 1?
 			-- How do we mitigate against an infinite loop?
-			if (RK.game.countTotalPlayers() <= 1) -- If the actual player count is 1 or less
-			or ((RK.game.countTotalPlayers() > 1) -- Or if the actual player count is 1 or more
-			and (RK.game.countInGamePlayers() <= 1) -- AND the number of ingame players is 1 or less
-			and (RK.game.countPlayersWithLives() > 1)) then -- But there is more than one player(s) with lives
+			if (RK.game.countTotalPlayers() <= 1) then -- If the actual player count is 1 or less
 				RK.game.pregame.warped = false
 				RK.game.pregame.var = true
 				S_StartSound(nil, sfx_s3kb2, consoleplayer) -- Play a little jingle [Failure]
@@ -124,15 +117,21 @@ addHook("ThinkFrame", do
 		-- Stock (Lives) match shenanigans
 		if (gametyperules & GTR_LIVES) then
 			if RK.game.pregame.var -- Are we in the pregame?
-			and (RK.game.countInGamePlayers() > 1) then -- The number of in-game players are > 1 (Two or more)
+			and not RK.game.exiting.var -- Not already exiting?
+			and (RK.game.countInGamePlayers() > 1) -- Number of total players is > 1 (Two or more)
+			and (RK.game.countPlayersWithLives() > 1) then -- The number of in-game players are > 1 (Two or more)
 				RK.game.pregame.var = false -- Start the in-game process
-				S_StartSound(nil, sfx_s3k63, consoleplayer) -- Play a little jingle [Checkpoint]
+				if not RK.game.pregame.warped then
+					S_StartSound(nil, sfx_s3k63, consoleplayer) -- Play a little jingle [Checkpoint]
+				end
 			elseif not RK.game.pregame.var -- No longer in the pregame?
 			and (RK.game.countTotalPlayers() > 1) -- Number of total players is > 1 (Two or more)
-			and (RK.game.countInGamePlayers() == 1) -- And the number of in-game players are 1
-			and (RK.game.countPlayersWithLives() == 1) -- AND there is only one in-game player(s) with lives to spare
+			and (RK.game.countInGamePlayers() > 1) -- AND the number of in-game players is > 1 (Two or more)
+			and (RK.game.countPlayersWithLives() <= 1)  -- AND the number of players with lives is 1 or less
 			and not RK.game.exiting.ticker then -- Not already exiting
 				RK.game.exiting.var = true -- Start the exit process
+				RK.game.pregame.var = true -- Let's reset the pregame variable(s)
+				RK.game.pregame.warped = false
 			end
 		end
 		
@@ -165,11 +164,13 @@ end)
 addHook("MapChange", function(mapnum) -- mapnum goes unused
 	RK.game.exiting.var = false
 	RK.game.exiting.ticker = 0
+	RK.game.pregame.var = true
 	RK.game.pregame.ticker = 0
 end)
 addHook("IntermissionThinker", do
 	RK.game.exiting.var = false
 	RK.game.exiting.ticker = 0
+	RK.game.pregame.var = true
 	RK.game.pregame.ticker = 0
 end)
 
@@ -214,6 +215,9 @@ addHook("TeamSwitch", function(p, team, fromspectators)
 end)
 
 addHook("NetVars", function(net)
-	RK.game.exiting = net($)
-	RK.game.pregame = net($)
+	RK.game.exiting.var = net($)
+	RK.game.exiting.ticker = net($)
+	RK.game.pregame.var = net($)
+	RK.game.pregame.ticker = net($)
+	RK.game.pregame.warped = net($)
 end)

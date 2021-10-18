@@ -99,6 +99,7 @@ end)
 
 addHook("PlayerSpawn", function(player)
 	player.ingametics = 0
+	player.spectatortime = 0
 	
 	local mo = player.mo or player.realmo
 	if G_IsRolloutGametype() and (mo and mo.valid) and not player.spectator then
@@ -305,7 +306,14 @@ end)
 addHook("PlayerThink", function(p)
 	if G_IsRolloutGametype() then
 		if (p.playerstate ~= PST_DEAD) then
-			if (p.playerstate == PST_LIVE) and not p.spectator then p.ingametics = $ + 1 end
+			if (p.playerstate == PST_LIVE) then
+				if not p.spectator then 
+					p.ingametics = $ + 1
+				else
+					p.spectatortime = $ + 1
+				end
+			end
+			--print(p.ingametics, p.spectatortime)
 		elseif (p.playerstate == PST_DEAD) then
 			RK.plyr.deathThink1(p)
 		end
