@@ -46,9 +46,10 @@ end
 RK.game.countPlayersWithLives = function()
 	local pcount = 0
 	for p in players.iterate
+		if p.spectator then continue end -- We're a spectator. Skip.
 		if not p.realmo then continue end -- Player does not have a mo object. Skip.
 		if p.bot then continue end  -- Player is a bot. Skip.
-		if (gametyperules & GTR_LIVES) and (p.lives <= 0) then continue end -- Out of lives
+		if (gametyperules & GTR_LIVES) and (p.lives <= 0) then continue end -- Out of lives. Skip
 		pcount = $ + 1
 	end
 	return pcount
@@ -152,8 +153,9 @@ addHook("ThinkFrame", do
 				end
 			elseif (RK.game.event.ticker >= TICRATE) then -- Also extend the p.exiting timer by another second
 				for p in players.iterate do
-					if not p.realmo then continue end
-					local rock = p.mo.rock
+					local mo = p.mo or p.realmo
+					if not mo then continue end
+					local rock = mo.rock
 					if rock and rock.valid
 					and rock.lastbumper then 
 						rock.lastbumpertics = 0
