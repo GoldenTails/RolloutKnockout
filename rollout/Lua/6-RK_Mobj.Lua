@@ -552,7 +552,9 @@ addHook("MobjMoveCollide", function(tmthing, thing)
 										((tmthing.z + tmthing.height/2) + (thing.z + thing.height/2))/2,
 										MT_DUMMY)
 							}
-			P_StartQuake(abs(tmthing.momx) + abs(tmthing.momy), 5)
+			if cv_rkquake.value then -- If the specified consvar is enabled...
+				P_StartQuake(min(2*tmthing.info.speed,impact.intensity), 5) -- Shake the screen.
+			end
 			if thing.lastbumper and (thing.lastbumpertics > 9*TICRATE) then
 				impact.mobj.state = S_SXPA
 			else

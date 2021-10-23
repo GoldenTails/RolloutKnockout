@@ -52,7 +52,7 @@ RK.hud.gameSET = function(v, p, ticker)
 	local ghzpatch = v.cachePatch("HUDGHZW")
 	local vsize = { x = v.width()/v.dupx(), y = v.height()/v.dupy() }
 	local voffsset = { x = 0, y = vsize.y/2 - ghzpatch.height/2 }
-	local vidflags = V_SNAPTOTOP|V_SNAPTOLEFT
+	local vidflags = V_SNAPTOTOP|V_SNAPTOLEFT|V_PERPLAYER
 	local txtgame, txtset = v.cachePatch("HUDGAME"), v.cachePatch("HUDSET")
 	
 	if (ticker == 2) then S_StartSound(nil, sfx_wwipe, p) end

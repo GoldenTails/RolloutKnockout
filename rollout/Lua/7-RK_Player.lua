@@ -33,7 +33,9 @@ RK.plyr.deathThink1 = function(p)
 		/*local xpld = P_SpawnMobj(mo.x, mo.y, mo.z + mo.height/2, MT_DUMMY) -- Spawn an object.
 		xpld.state = S_SXPA*/
 		S_StartSound(xpld, sfx_pplode) -- Play a sound.
-		P_StartQuake(40*FRACUNIT, 5) -- Shake the screen.
+		if cv_rkquake.value then -- If the specified consvar is enabled...
+			P_StartQuake(40*FRACUNIT, 5) -- Shake the screen.
+		end
 		
 		-- We're already doing a number of flashy effects while exiting. 
 		-- Don't process anything else.
@@ -80,7 +82,9 @@ RK.plyr.deathThink2 = function(p)
 				xpld.scalespeed = xpld.destscale/TICRATE
 			end
 		end*/
-		P_StartQuake(35*FRACUNIT, 5)
+		if cv_rkquake.value then -- If the specified consvar is enabled...
+			P_StartQuake(35*FRACUNIT, 5) -- Shake the screen.
+		end
 	end
 end
 

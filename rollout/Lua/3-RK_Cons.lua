@@ -13,8 +13,14 @@ RK.cons = {}
 -- Respawn consvar
 -- Respawns the player
 RK.cons.Respawn = function(p)
-	if G_IsRolloutGametype() then
-		if p and p.valid then p.playerstate = PST_REBORN end
+	if (gamestate == GS_LEVEL) and G_IsRolloutGametype() then
+		--local mo = p.mo or p.realmo
+		--local rock = mo.rock
+		if p and p.valid
+		--if rock and rock.valid and (P_MobjFlip(rock)*rock.momz >= 0)
+		and p.lives then
+			p.playerstate = PST_REBORN 
+		end
 	else
 		CONS_Printf(p, "Sorry. This command can only be used in Rollout Knockout maps!")
 	end
@@ -53,6 +59,15 @@ rawset(_G, "cv_rkpercentview", CV_RegisterVar({
 -- This is so lives-based matches don't last forever.
 rawset(_G, "cv_rkdefaulttime", CV_RegisterVar({
 	name = "rk_defaulttime",
+	defaultvalue = 1,
+	flags = CV_SAVE|CV_NETVAR,
+	PossibleValue = CV_YesNo,
+	func = 0,
+}))
+
+-- Enable/disable camera shaking in Rollout Knockout.
+rawset(_G, "cv_rkquake", CV_RegisterVar({
+	name = "rk_enablequake",
 	defaultvalue = 1,
 	flags = CV_SAVE|CV_NETVAR,
 	PossibleValue = CV_YesNo,
