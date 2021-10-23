@@ -77,16 +77,25 @@ RK.game.countTotalTeamPlayers = function(p) -- p 'host' needed too pass variable
 	return totalteamplayers
 end
 
+addHook("MapLoad", function(mapnum)
+	-- Thinkframe is ran twice before MapLoad
+	if (RK.game.countTotalPlayers() > 1) -- If you have enough players in-game upon MapLoad
+	and (RK.game.countInGamePlayers() > 1) then
+		RK.game.event.state = RKGS_GAME -- Go straight into the RKGS_GAME, gamestate
+	end
+end)
+
 addHook("ThinkFrame", do
 	if G_IsRolloutGametype() then
 		local timelimit = CV_FindVar("timelimit").value
-		--if true then return end
 		if (RK.game.event.state == RKGS_PREP)
 		or (RK.game.event.state == RKGS_EXIT) then
 			RK.game.event.ticker = $ + 1
 		else
 			RK.game.event.ticker = 0
 		end
+
+		if not leveltime then return end -- Don't process anything for the first few level tics.
 
 		-- Event handler
 		if (RK.game.event.state == RKGS_PRE) -- Pre-game state
@@ -109,8 +118,8 @@ addHook("ThinkFrame", do
 		if (RK.game.event.state == RKGS_PREP) -- Preparation State
 		and (RK.game.event.ticker == 5*TICRATE) then
 			RK.game.event.state = RKGS_GAME
-			G_SetCustomExitVars(gamemap, 1) -- Nextmap will be the same map, skip stats
-			G_ExitLevel() -- Reload!
+			--G_SetCustomExitVars(gamemap, 1) -- Nextmap will be the same map, skip stats
+			G_ExitLevel(gamemap, 1) -- Reload!
 			return -- Don't process anything else this tic
 		end
 
@@ -152,6 +161,11 @@ addHook("ThinkFrame", do
 					p.powers[pw_nocontrol] = 4*TICRATE
 				end
 			elseif (RK.game.event.ticker >= TICRATE) then -- Also extend the p.exiting timer by another second
+				if (RK.game.event.ticker == 10*TICRATE) then -- Exiting ticker has gone on for much longer than it otherwise should have.
+					print("\x85Failsafe\x80: Ticker threshold reached! Immedaitely warp to the next map!")
+					G_ExitLevel(mapheaderinfo[gamemap].nextlevel, false)
+					return -- Don't process anything else
+				end
 				for p in players.iterate do
 					local mo = p.mo or p.realmo
 					if not mo then continue end
@@ -172,11 +186,11 @@ end)
 
 -- Reset the exiting variables.
 addHook("MapChange", function(mapnum) -- mapnum goes unused
-	if (RK.game.event.state > RKGS_GAME) then RK.game.event.state = RKGS_PRE end
+	RK.game.event.state = RKGS_PRE
 	RK.game.event.ticker = 0
 end)
 addHook("IntermissionThinker", do
-	if (RK.game.event.state > RKGS_GAME) then RK.game.event.state = RKGS_PRE end
+	RK.game.event.state = RKGS_PRE
 	RK.game.event.ticker = 0
 end)
 

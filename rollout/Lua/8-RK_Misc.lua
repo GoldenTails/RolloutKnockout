@@ -158,7 +158,7 @@ RK.hud.game = function(v, p)
 					low = v.cachePatch("RKLL")
 					}
 	local vflags = rkhud.f | V_PERPLAYER
-	if p.spectator then vflags = $|V_HUDTRANSHALF end
+	if p.spectator then vflags = $|V_50TRANS end
 	local pname = p.name
 	local mo = p.mo or p.realmo
 	if not mo then return end -- Stop here if `mo` is not found
@@ -232,7 +232,7 @@ RK.hud.game = function(v, p)
 	-- Cooldown timer
 	if (p.weapondelay-2 > 0) and not (leveltime%2) then
 		local text = "\x86"..G_TicsToSeconds(p.weapondelay-2).."."..G_TicsToCentiseconds(p.weapondelay-2)
-		v.drawString(rkhud.x+42,rkhud.y+7,text,vflags|V_HUDTRANS,"small-thin")
+		v.drawString(rkhud.x+42,rkhud.y+7,text,vflags,"small-thin")
 	end
 	
 	local text, bval = {}, 0
@@ -286,7 +286,11 @@ RK.hud.scores = function(v)
  		RK.ptable.u = {}
 		for p in players.iterate do
 			if G_GametypeUsesLives() then
-				table.insert(RK.ptable.u, {p, p.lives})
+				if p.spectator then
+					table.insert(RK.ptable.u, {p, 0})
+				else
+					table.insert(RK.ptable.u, {p, p.lives})
+				end
 			else
 				table.insert(RK.ptable.u, {p, p.score})
 			end
@@ -341,8 +345,9 @@ RK.hud.scores = function(v)
 
 		for i = 1, #RK.ptable.s do
 			local p = RK.ptable.s[i] -- We've come full circle now.
+			if p.spectator or (p.playerstate == PST_DEAD) then vflags = $|V_50TRANS end
 			local mo = p.mo or p.realmo
-			if not p.mo then continue end -- Something has gone horribly wrong up until this point
+			if not mo then continue end -- Something has gone horribly wrong up until this point
 			local pname = p.name
 			local pface = v.getSprite2Patch(mo.skin, SPR2_XTRA, 0, 0) -- Get this player's icon!
 			local pcolor = v.getColormap(TC_DEFAULT, p.skincolor)
@@ -352,31 +357,24 @@ RK.hud.scores = function(v)
 
 			if (#RK.ptable.s <= 8) then -- Less than 8 players
 				v.drawString(offset.x, vsize.y/6 + (i-1)*70, i, vflags) -- Player node number
-				if p.spectator or (p.playerstate == PST_DEAD) then
-					v.drawScaled((offset.x + 64)*FRACUNIT, 
-									(vsize.y/7 + (i-1)*70)*FRACUNIT, 
-									FRACUNIT/2, pface,
-									V_50TRANS|vflags, pcolor) -- Player Portrait w/ current player color (Transparent)
-				else
-					v.drawScaled((offset.x + 64)*FRACUNIT, 
-									(vsize.y/7 + (i-1)*70)*FRACUNIT, 
-									FRACUNIT/2, pface,
-									vflags, pcolor) -- Player Portrait w/ current player color
-				end
+				v.drawScaled((offset.x + 64)*FRACUNIT, 
+								(vsize.y/7 + (i-1)*70)*FRACUNIT, 
+								FRACUNIT/2, pface,
+								vflags, pcolor) -- Player Portrait w/ current player color
 				if (p == consoleplayer) then
 					v.drawString(offset.x + 136, vsize.y/6 + (i-1)*70, pname, vflags|V_YELLOWMAP|V_ALLOWLOWERCASE) -- Player Name (Yellow - You)
 				else
 					v.drawString(offset.x + 136, vsize.y/6 + (i-1)*70, pname, vflags|V_ALLOWLOWERCASE) -- Player Name
 				end
 				if mo.rock and mo.rock.valid then
-					v.drawString(8*offset.x + offset.xh, vsize.y/6 + (i-1)*70, p.mo.rock.percent.."%", vflags, "right") -- Rock Damage
+					v.drawString(8*offset.x + offset.xh, vsize.y/6 + (i-1)*70, mo.rock.percent.."%", vflags, "right") -- Rock Damage
 				else
-					v.drawString(8*offset.x + offset.xh, vsize.y/6 + (i-1)*70, "NaN".."%", vflags|V_ALLOWLOWERCASE, "right") -- Rock Damage
+					v.drawString(8*offset.x + offset.xh, vsize.y/6 + (i-1)*70, "NaN%", vflags|V_ALLOWLOWERCASE, "right") -- Rock Damage
 				end
 
 				-- Gametype differences
 				if G_GametypeUsesLives() then
-					v.drawString(11*offset.x + offset.xh, vsize.y/6 + (i-1)*70, p.lives, vflags, "right") -- Lives count in STOCK
+					v.drawString(11*offset.x + offset.xh, vsize.y/6 + (i-1)*70, p.spectator and "?" or p.lives, vflags, "right") -- Lives count in STOCK
 				else
 					v.drawString(11*offset.x + offset.xh, vsize.y/6 + (i-1)*70, p.score, vflags, "right") -- Score #
 				end
@@ -384,57 +382,43 @@ RK.hud.scores = function(v)
 			else -- More than 8 players
 				if (i <= 8) then
 					v.drawString(offset.xh, vsize.y/6 + (i-1)*70, i, vflags, "thin") -- Player node number
-					if p.spectator or (p.playerstate == PST_DEAD) then
-						v.drawScaled((offset.xh + 64)*FRACUNIT, 
-										(vsize.y/7 + 8 + (i-1)*70)*FRACUNIT, 
-										FRACUNIT/3, pface,
-										V_50TRANS|vflags, pcolor) -- Player Portrait w/ current player color (Transparent)
-					else
-						v.drawScaled((offset.xh + 64)*FRACUNIT, 
-										(vsize.y/7 + 8 + (i-1)*70)*FRACUNIT, 
-										FRACUNIT/3, pface,
-										vflags, pcolor) -- Player Portrait w/ current player color
-					end
+					v.drawScaled((offset.xh + 64)*FRACUNIT, 
+									(vsize.y/7 + 8 + (i-1)*70)*FRACUNIT, 
+									FRACUNIT/3, pface,
+									vflags, pcolor) -- Player Portrait w/ current player color
 					if (p == consoleplayer) then
 						v.drawString(offset.xh + 136, vsize.y/6 + (i-1)*70, pname, vflags|V_YELLOWMAP|V_ALLOWLOWERCASE, "thin") -- Player Name (Yellow - You)
 					else
 						v.drawString(offset.xh + 136, vsize.y/6 + (i-1)*70, pname, vflags|V_ALLOWLOWERCASE, "thin") -- Player Name
 					end
 					if mo.rock and mo.rock.valid then
-						v.drawString((9*offset.x)/2, vsize.y/6 + (i-1)*70, p.mo.rock.percent.."%", vflags, "thin-right") -- Rock Damage
+						v.drawString((9*offset.x)/2, vsize.y/6 + (i-1)*70, mo.rock.percent.."%", vflags, "thin-right") -- Rock Damage
 					else
-						v.drawString((9*offset.x)/2, vsize.y/6 + (i-1)*70, "NaN".."%", vflags|V_ALLOWLOWERCASE, "thin-right") -- Rock Damage
+						v.drawString((9*offset.x)/2, vsize.y/6 + (i-1)*70, "NaN%", vflags|V_ALLOWLOWERCASE, "thin-right") -- Rock Damage
 					end
 
 					-- Gametype differences
 					if G_GametypeUsesLives() then
-						v.drawString(11*offset.xh + offset.x/4, vsize.y/6 + (i-1)*70, p.lives, vflags, "thin-right") -- Lives count in STOCK
+						v.drawString(11*offset.xh + offset.x/4, vsize.y/6 + (i-1)*70, p.spectator and "?" or p.lives, vflags, "thin-right") -- Lives count in STOCK
 					else
 						v.drawString(11*offset.xh + offset.x/4, vsize.y/6 + (i-1)*70, p.score, vflags, "thin-right") -- Score #
 					end
 				elseif (i <= 16) then
 					v.drawString(offset.xh2, vsize.y/6 + (i-9)*70, i, vflags, "thin") -- Player node number
-					if p.spectator or (p.playerstate == PST_DEAD) then
-						v.drawScaled((offset.xh2 + 64)*FRACUNIT, 
-										(vsize.y/7 + 8 + (i-9)*70)*FRACUNIT, 
-										FRACUNIT/3, pface,
-										V_50TRANS|vflags, pcolor) -- Player Portrait w/ current player color (Transparent)
-					else
-						v.drawScaled((offset.xh2 + 64)*FRACUNIT, 
-										(vsize.y/7 + 8 + (i-9)*70)*FRACUNIT, 
-										FRACUNIT/3, pface,
-										vflags, pcolor) -- Player Portrait w/ current player color
-					end
+					v.drawScaled((offset.xh2 + 64)*FRACUNIT, 
+									(vsize.y/7 + 8 + (i-9)*70)*FRACUNIT, 
+									FRACUNIT/3, pface,
+									vflags, pcolor) -- Player Portrait w/ current player color
 					v.drawString(offset.xh2 + 136, vsize.y/6 + (i-9)*70, pname, vflags|V_ALLOWLOWERCASE, "thin") -- Player Name
 					if mo.rock and mo.rock.valid then
 						v.drawString((9*offset.x)/2 + vsize.x/2, vsize.y/6 + (i-9)*70, p.mo.rock.percent.."%", vflags, "thin-right") -- Rock Damage
 					else
-						v.drawString((9*offset.x)/2 + vsize.x/2, vsize.y/6 + (i-9)*70, "NaN".."%", vflags|V_ALLOWLOWERCASE, "thin-right") -- Rock Damage
+						v.drawString((9*offset.x)/2 + vsize.x/2, vsize.y/6 + (i-9)*70, "NaN%", vflags|V_ALLOWLOWERCASE, "thin-right") -- Rock Damage
 					end
 					
 					-- Gametype differences
 					if G_GametypeUsesLives() then
-						v.drawString(11*offset.xh + offset.x/4 + vsize.x/2, vsize.y/6 + (i-9)*70, p.lives, vflags, "thin-right") -- Lives count in STOCK
+						v.drawString(11*offset.xh + offset.x/4 + vsize.x/2, vsize.y/6 + (i-9)*70, p.spectator and "?" or p.lives, vflags, "thin-right") -- Lives count in STOCK
 					else
 						v.drawString(11*offset.xh + offset.x/4 + vsize.x/2, vsize.y/6 + (i-9)*70, p.score, vflags, "thin-right") -- Score #
 					end
