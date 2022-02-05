@@ -83,6 +83,16 @@ addHook("MapLoad", function(mapnum)
 	and (RK.game.countInGamePlayers() > 1) then
 		RK.game.event.state = RKGS_GAME -- Go straight into the RKGS_GAME, gamestate
 	end
+	
+	if mapheaderinfo[mapnum].itemlist then
+		local s = mapheaderinfo[mapnum].itemlist
+		for word in s:gmatch('([^,]+)') do
+			print(word .. ": " .. _G[word])
+		end
+		--for word in s:gmatch('[^,%s]+') do -- To handle optional whitespace
+		--	print(word)
+		--end
+	end
 end)
 
 addHook("ThinkFrame", do
@@ -160,7 +170,7 @@ addHook("ThinkFrame", do
 					if p.powers[pw_nocontrol] then continue end
 					p.powers[pw_nocontrol] = 4*TICRATE
 				end
-			elseif (RK.game.event.ticker >= TICRATE) then -- Also extend the p.exiting timer by another second
+			elseif (RK.game.event.ticker >= TICRATE/2) then -- Also extend the p.exiting timer by another second
 				if (RK.game.event.ticker == 10*TICRATE) then -- Exiting ticker has gone on for much longer than it otherwise should have.
 					print("\x85Failsafe\x80: Ticker threshold reached! Immedaitely warp to the next map!")
 					G_ExitLevel(mapheaderinfo[gamemap].nextlevel, false)
@@ -236,6 +246,8 @@ addHook("TeamSwitch", function(p, team, fromspectators)
 end)
 
 addHook("NetVars", function(net)
-	RK.game.event.state = net($)
-	RK.game.event.ticker = net($)
+	RK.game.event = {
+		state = net(RK.game.event.state),
+		ticker = net(RK.game.event.ticker)
+	}
 end)

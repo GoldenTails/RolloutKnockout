@@ -162,7 +162,7 @@ RK.hud.game = function(v, p)
 	local pname = p.name
 	local mo = p.mo or p.realmo
 	if not mo then return end -- Stop here if `mo` is not found
-	local pface, pface2 = v.getSprite2Patch(mo.skin, SPR2_SIGN, 0, 0), v.getSprite2Patch(mo.skin, SPR2_LIFE, 0, 0) -- Get this player's icon!
+	local pface, pface2 = v.getSprite2Patch(mo.skin, SPR2_SIGN), v.getSprite2Patch(mo.skin, SPR2_LIFE, 0, C) -- Get this player's icon!
 	local pcolor = v.getColormap(TC_DEFAULT, p.skincolor)
 	
 	-- Trim the characters to a Max of 8 characters.
@@ -188,7 +188,7 @@ RK.hud.game = function(v, p)
 	v.drawScaled((rkhud.x+17)*FRACUNIT, 
 				(rkhud.y+15)*FRACUNIT,
 				3*FRACUNIT/4,
-				pface, 
+				pface,
 				vflags, pcolor)
 	
 	-- Stock icon
