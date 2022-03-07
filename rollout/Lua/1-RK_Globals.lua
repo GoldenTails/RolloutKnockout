@@ -28,9 +28,18 @@ rawset(_G, "createEnum", function(tname, t, from)
     end
 end)
 
+-- Freeslots something without making duplicates
+local function CheckSlot(item) -- this function deliberately errors when a freeslot does not exist
+	if _G[item] == nil -- this will error by itself for states and objects
+		error() -- this forces an error for sprites, which do actually return nil for some reason
+	end
+end
+
 rawset(_G, "SafeFreeslot", function(...)
 	for _, item in ipairs({...})
-		if rawget(_G, item) == nil
+		if pcall(CheckSlot, item)
+			print("\131NOTICE:\128 " .. item .. " was not allocated, as it already exists.")
+		else
 			freeslot(item)
 		end
 	end
@@ -82,4 +91,8 @@ rawset(_G, "FreeSetZ", function(mo, newz)
     mo.flags = $ | clip
     mo.z = newz
     mo.flags = $ & ~clip
+end)
+
+rawset(_G, "valid", function(mo)
+	return mo and mo.valid
 end)

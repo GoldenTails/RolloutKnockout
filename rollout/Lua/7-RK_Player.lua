@@ -11,8 +11,8 @@
 RK.plyr = {}
 
 RK.plyr.deathThink1 = function(p)
-	if not p or not p.valid then return end
-	if not p.mo or not p.mo.valid then return end
+	if not valid(p) then return end
+	if not valid(p.mo) then return end
 	
 	local mo = p.mo -- Simplify
 	if (mo.fuse > 1) 
@@ -56,8 +56,8 @@ RK.plyr.deathThink1 = function(p)
 end
 
 RK.plyr.deathThink2 = function(p)
-	if not p or not p.valid then return end
-	if not p.mo or not p.mo.valid then return end
+	if not valid(p) then return end
+	if not valid(p.mo) then return end
 	
 	local mo = p.mo -- Simplify
 	if (mo.fuse > 1) then
@@ -106,10 +106,10 @@ addHook("PlayerSpawn", function(player)
 	player.spectatortime = 0
 	
 	local mo = player.mo or player.realmo
-	if G_IsRolloutGametype() and (mo and mo.valid) and not player.spectator then
+	if G_IsRolloutGametype() and valid(mo) and not player.spectator then
 		player.powers[pw_nocontrol] = TICRATE/3
 		mo.rock = P_SpawnMobj(mo.x, mo.y, mo.z, MT_ROLLOUTROCK) -- Spawn rock at Player's current x/y/z.
-		if not mo.rock or not mo.rock.valid then return end -- Something has gone horribly wrong
+		if not valid(mo.rock) then return end -- Something has gone horribly wrong
 		local rock = mo.rock -- Simplify
 		if (mo.eflags & MFE_VERTICALFLIP) then -- Place player "on" the rock
 			P_TeleportMove(mo, mo.x, mo.y, mo.z - FRACUNIT)
@@ -169,8 +169,8 @@ end
 
 addHook("JumpSpecial", function(p)
 	if G_IsRolloutGametype() then
-		if p.mo and p.mo.valid
-		and p.mo.rock and p.mo.rock.valid then
+		if valid(p.mo)
+		and valid(p.mo.rock) then
 			local mo = p.mo
 			if (P_IsObjectOnGround(mo.rock) -- On ground
 			or (mo.rock.eflags & MFE_TOUCHWATER) -- Or touching Water
@@ -326,8 +326,8 @@ end)
 
 addHook("MobjDeath", function(mo)
 	if G_IsRolloutGametype() then
-		if mo and mo.valid
-		and mo.player and mo.player.valid then
+		if valid(mo)
+		and valid(mo.player) then
 			local p = mo.player
 			mo.flags = $ & ~(MF_SOLID|MF_SHOOTABLE)
 			mo.flags = $ | (MF_NOBLOCKMAP|MF_NOCLIP|MF_NOCLIPHEIGHT|MF_NOGRAVITY)

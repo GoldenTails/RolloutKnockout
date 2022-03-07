@@ -59,6 +59,7 @@ SelectHeading = Small Maps
 Subtitle = By So2ro
 NextLevel = RK
 Lua.rockfloat = true
+#Lua.itemlist = MT_RING_BOX,MT_FLAMEAURA_BOX,MT_BUBBLEWRAP_BOX,MT_THUNDERCOIN_BOX
 
 Level RK
 LevelName = Freezy Fight

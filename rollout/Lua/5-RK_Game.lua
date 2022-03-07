@@ -180,7 +180,7 @@ addHook("ThinkFrame", do
 					local mo = p.mo or p.realmo
 					if not mo then continue end
 					local rock = mo.rock
-					if rock and rock.valid
+					if valid(rock)
 					and rock.lastbumper then 
 						rock.lastbumpertics = 0
 						rock.lastbumper = nil
@@ -207,9 +207,9 @@ end)
 -- HurtMsg hook to replace the default "x's tagging hand killed y" Message
 addHook("HurtMsg", function(p, i, s)
 	if G_IsRolloutGametype() then
-		if not p or not p.valid then return end
-		if not i or not i.valid then return end
-		if not s or not s.valid then return end
+		if not valid(p) then return end
+		if not valid(i) then return end
+		if not valid(s) then return end
 		
 		if (i.type == s.type) and i.player and s.player then
 			print(s.player.name.." killed "..p.name..".")
@@ -225,7 +225,7 @@ end)
 addHook("TeamSwitch", function(p, team, fromspectators)
 	if G_IsRolloutGametype() and (gamestate == GS_LEVEL) 
 	and G_GametypeUsesLives() then
-		if p and p.valid then
+		if valid(p) then
 			-- Cheeky check for those that die, become a spectator, and attempt to re-enter the game...
 			if fromspectators then
 				if p.lives <= 0 then

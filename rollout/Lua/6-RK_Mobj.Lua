@@ -13,7 +13,7 @@ RK.mobj = {}
 -- Lat'
 RK.mobj.spawnAura = function(mo, color)	-- spawn a aura around mo
 	if leveltime%2 then return end
-	if not mo or not mo.valid then return end
+	if not valid(mo) then return end
 	color = $ or SKINCOLOR_TEAL
 	if (type(color) ~= "number") then
 		error("Error: spawnAura expects a number")
@@ -26,7 +26,7 @@ RK.mobj.spawnAura = function(mo, color)	-- spawn a aura around mo
 		local x, y = mo.x + dist*cos(angle), mo.y + dist*sin(angle)
 
 		local aura = P_SpawnMobj(x, y, mo.z + mo.height/4 + i*FRACUNIT*3, MT_DUMMY)
-		--if not aura or not aura.valid continue end
+		--if not valid(aura) continue end
 		aura.state = S_AURA1
 		aura.angle = angle - ANGLE_90
 		aura.color = color
@@ -55,8 +55,8 @@ end
 
 RK.mobj.spawnArrow = function(mo, target, dist)
 	-- Need both a source 'mo' and a target 'mo'
-	if not mo or not mo.valid then return end
-	if not target or not target.valid then return end
+	if not valid(mo) then return end
+	if not valid(target) then return end
 	if (type(dist) ~= "number") then
 		error("Error: spawnArrow expects a number")
 		return
@@ -87,7 +87,7 @@ RK.mobj.spawnArrow = function(mo, target, dist)
 end
 
 RK.mobj.spawnSmoke = function(mo, freq)
-	if not mo or not mo.valid then return end
+	if not valid(mo) then return end
 	freq = $ or 3
 	if (type(freq) ~= "number") then
 		error("Error: spawnSmoke expects a number")
@@ -112,7 +112,7 @@ RK.mobj.spawnSmoke = function(mo, freq)
 end
 
 RK.mobj.spawnRecoilSmoke = function(mo)
-	if not mo or not mo.valid then return end
+	if not valid(mo) then return end
 	
 	if not (leveltime%4) then
 		local trail = P_SpawnMobj(mo.x,
@@ -173,12 +173,12 @@ end
 -- Flame
 /*RK.mobj.CountPlayersInRadius = function(mo, dist)
 	local pcount = 0
-	if not mo or not mo.valid then return pcount end
+	if not valid(mo) then return pcount end
 	for p in players.iterate do
 		if p.spectator then continue end -- We're a spectator. Skip.
 		if (p.playerstate ~= PST_LIVE) continue end -- Skip anyone not alive
 		if not p.mo then continue end -- Not a mo object. Skip.
-		if not p.mo.rock or not p.mo.rock.valid then continue end -- No rock to reference. Skip.
+		if not valid(p.mo.rock) then continue end -- No rock to reference. Skip.
 		if (p.mo.rock == mo) then continue end -- Our rock? Skip us
 		if (FixedHypot(FixedHypot(p.mo.x - mo.x, p.mo.y - mo.y), 
 									p.mo.z - mo.z) > dist) then
@@ -190,7 +190,7 @@ end
 end*/
 
 RK.mobj.look4ClosestMo = function(mo, dist, mtype)
-	if not mo or not mo.valid then return end
+	if not valid(mo) then return end
 	
 	local closestmo
 	local closestdist = dist
@@ -213,13 +213,13 @@ RK.mobj.look4ClosestMo = function(mo, dist, mtype)
 end
 
 addHook("MobjThinker", function(mo)
-    if mo and mo.valid
+    if valid(mo)
     and G_IsRolloutGametype() then
 		mo.percent = $ or 0
 		
-		if mo.target and mo.target.valid then -- Valid target
+		if valid(mo.target) then -- Valid target
 			-- Did your target player suddenly die?
-			if mo.target.player and mo.target.player.valid
+			if valid(mo.target.player)
 			and (mo.target.player.playerstate == PST_DEAD) then
 				P_RemoveMobj(mo) -- So should you!
 				return
@@ -228,7 +228,7 @@ addHook("MobjThinker", function(mo)
 			-- Your ball is colored!
 			if mo.colorized then
 				-- If you have a lastbumper, set your color to your lastbumper for a bit!
-				if mo.lastbumper and mo.lastbumper.valid
+				if valid(mo.lastbumper)
 				and (mo.lastbumpertics > 9*TICRATE)
 				and not (leveltime%2) then
 					mo.color = mo.lastbumper.color
@@ -238,7 +238,7 @@ addHook("MobjThinker", function(mo)
 			end
 			
 			-- Percentages and Arrows
-			if mo.target.player and mo.target.player.valid then
+			if valid(mo.target.player) then
 				local p = mo.target.player -- Simplify
 				
 				if (cv_rkpercentview.value == 2) then
@@ -265,7 +265,7 @@ addHook("MobjThinker", function(mo)
 					local closestmo = RK.mobj.look4ClosestMo(mo, 512*FRACUNIT, MT_ROLLOUTROCK) -- Look for a mo that's closest to us.
 					
 					if closestmo -- Found one?
-						if not consoleplayer or not consoleplayer.valid then return end -- Error checking, something has gone horribly wrong.
+						if not valid(consoleplayer) then return end -- Error checking, something has gone horribly wrong.
 						
 						if (p == consoleplayer) -- Don't display for us.
 						and not splitscreen then
@@ -347,7 +347,7 @@ addHook("MobjThinker", function(mo)
         end
 		
 		-- Last bumper for score calculation
-		if mo.lastbumper and mo.lastbumper.valid -- Validity check
+		if valid(mo.lastbumper) -- Validity check
 		and (mo.lastbumpertics > 0) then
 			mo.lastbumpertics = $ - 1
 			if (mo.lastbumpertics == 1) then -- Last tic
@@ -389,8 +389,8 @@ addHook("MobjThinker", function(mo)
 		end
 		
 		/*-- Spawn an item box just for fun.
-		if mo.target and mo.target.valid 
-		and mo.target.player and mo.target.player.valid then
+		if valid(mo.target)
+		and valid(mo.target.player) then
 			local cmd = mo.target.player.cmd
 			if (cmd.buttons & BT_CUSTOM1) and not mo.rkabilitytics then
 				local itembox = P_SpawnMobj(mo.x - FixedMul(cos(mo.target.angle), mo.radius*3), 
@@ -410,7 +410,7 @@ end, MT_ROLLOUTROCK)
 local ringtrans_t = {TR_TRANS20, TR_TRANS30, TR_TRANS40, TR_TRANS50, TR_TRANS60, TR_TRANS70, TR_TRANS80, TR_TRANS90}
 -- Item box object
 addHook("MobjThinker", function(mo)
-	if mo and mo.valid
+	if valid(mo)
 	and G_IsRolloutGametype() then
 		if (mo.state == S_RKITEMBOX1) and not mo.ring then -- Main '?' circle
 			for i = 1, 2 do
@@ -421,7 +421,7 @@ addHook("MobjThinker", function(mo)
 				mo.ring.angle = mo.angle+fa
 			end
 		elseif (mo.state == S_RKITEMBOX2) -- Outer ring
-			if mo.target and mo.target.valid
+			if valid(mo.target)
 			and mo.target.health then
 				if (mo.target == MT_ROLLOUTROCK) then
 					P_TeleportMove(mo, mo.target.x, mo.target.y, mo.target.z)
@@ -446,8 +446,8 @@ addHook("MobjThinker", function(mo)
 end, MT_DUMMY)
 
 addHook("MobjMoveCollide", function(tmthing, thing)
-	if tmthing and tmthing.valid
-	and thing and thing.valid then
+	if valid(tmthing)
+	and valid(thing) then
 		if (tmthing.z > (thing.z + thing.height)) -- No Z collision? Let's fix that!
 		or ((tmthing.z + tmthing.height) < thing.z) then
 			return -- Out of range
@@ -472,7 +472,7 @@ end, MT_ROLLOUTROCK) -- Rock vs Dummy object
 
 -- Score object
 addHook("MobjThinker", function(mo)
-	if mo and mo.valid
+	if valid(mo)
 	and G_IsRolloutGametype() then
 		if (mo.state == S_NIGHTSCORE100) then
 			mo.color = (leveltime%69) -- NICE
@@ -497,8 +497,8 @@ end, MT_DUMMY)
 
 -- Rock v rock
 addHook("MobjCollide", function(thing, tmthing)
-	if thing and thing.valid
-	and tmthing and tmthing.valid then
+	if valid(thing)
+	and valid(thing) then
 		if (thing.z > (tmthing.z + tmthing.height)) -- No Z collision? Let's fix that!
 		or ((thing.z + thing.height) < tmthing.z) then
 			return -- Out of range
@@ -509,8 +509,8 @@ addHook("MobjCollide", function(thing, tmthing)
 			thing.bumpcounttics = TICRATE/3
 		end
 		
-		if thing.target and thing.target.valid
-		and thing.target.player and thing.target.player.valid then
+		if valid(thing.target)
+		and valid(thing.target.player) then
 			local p = thing.target.player
 			
 			-- Respawn failsafe
@@ -537,8 +537,8 @@ end
 
 -- Moving rock v rock
 addHook("MobjMoveCollide", function(tmthing, thing)
-	if tmthing and tmthing.valid
-	and thing and thing.valid then
+	if valid(tmthing)
+	and valid(thing) then
 		if (tmthing.z > (thing.z + thing.height)) -- No Z collision? Let's fix that!
 		or ((tmthing.z + tmthing.height) < thing.z) then
 			return -- Out of range
@@ -561,7 +561,7 @@ addHook("MobjMoveCollide", function(tmthing, thing)
 				impact.mobj.state = S_IMPACT1
 			end
 
-			if tmthing.target and tmthing.target.valid then
+			if valid(tmthing) then
 				-- Collision! for points!
 				thing.lastbumper = tmthing.target
 				thing.lastbumpertics = 10*TICRATE -- 10 second cooldown
@@ -596,9 +596,9 @@ end, MT_ROLLOUTROCK) -- Our tmthing
 -- Rock removed
 addHook("MobjRemoved", function(mobj)
 	if G_IsRolloutGametype() then
-		if mobj and mobj.valid -- Valid check
-		and mobj.target -- Do you have a target?
-		and mobj.target.player and mobj.target.player.valid then -- Is it a player?
+		if valid(mobj) -- Valid check
+		and valid(mobj.target) -- Do you have a target?
+		and valid(mobj.target.player) then -- Is it a player?
 			-- Poof goes the rock!
 			local poof = P_SpawnMobj(mobj.x, mobj.y, mobj.z + FRACUNIT*32, MT_EXPLODE)
 			P_SetMobjStateNF(poof, S_FBOMB_EXPL1)
@@ -606,13 +606,13 @@ addHook("MobjRemoved", function(mobj)
 			
 			-- Your host is already dead. Eg. Your host died before you.
 			if (mobj.target.player.playerstate == PST_DEAD) then 
-				if mobj.lastbumper and mobj.lastbumper.valid
-				and mobj.lastbumper.player and mobj.lastbumper.player.valid then -- Validity check
+				if valid(mobj.lastbumper)
+				and valid(mobj.lastbumper.player) then -- Validity check
 					-- There would be occurances where your host dies before the rock disappears, and no points for score are awarded
 					-- This 'hopefully' fixes that.
 					--print("Player died before the Rock despawned!")
 					P_AddPlayerScore(mobj.lastbumper.player, 100)
-					if mobj.lastbumper.rock and mobj.lastbumper.rock.valid then
+					if valid(mobj.lastbumper.rock) then
 						mobj.lastbumper.rock.fxtimer = 3*TICRATE/2
 						S_StartSound(mobj.lastbumper.rock, sfx_pointu)
 						
@@ -628,8 +628,8 @@ addHook("MobjRemoved", function(mobj)
 					end
 				end
 			else -- You died before your host.
-				if mobj.lastbumper and mobj.lastbumper.valid
-				and mobj.lastbumper.rock and mobj.lastbumper.rock.valid then
+				if valid(mobj.lastbumper)
+				and valid(mobj.lastbumper.rock) then
 					--print("Rock died before the player! Killing player!")
 					P_DamageMobj(mobj.target,mobj.lastbumper.rock,mobj.lastbumper,1,DMG_INSTAKILL) -- Kill your host
 					mobj.lastbumper.rock.fxtimer = 3*TICRATE/2
@@ -644,7 +644,7 @@ addHook("MobjRemoved", function(mobj)
 					dummy.fuse = 3*TICRATE
 					dummy.scalespeed = FRACUNIT/25
 					dummy.destscale = 2*FRACUNIT
-				elseif mobj.lastbumper and mobj.lastbumper.valid then
+				elseif valid(mobj.lastbumper) then
 					-- Goto: HURTMSG Hook for this
 					P_DamageMobj(mobj.target,mobj.lastbumper,mobj.lastbumper,1,DMG_INSTAKILL) -- Kill your host
 				else

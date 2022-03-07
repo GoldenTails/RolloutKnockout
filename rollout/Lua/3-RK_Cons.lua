@@ -16,7 +16,7 @@ RK.cons.Respawn = function(p)
 	if (gamestate == GS_LEVEL) and G_IsRolloutGametype() then
 		--local mo = p.mo or p.realmo
 		--local rock = mo.rock
-		if p and p.valid
+		if valid(p)
 		--if rock and rock.valid and (P_MobjFlip(rock)*rock.momz >= 0)
 		and p.lives then
 			p.playerstate = PST_REBORN 

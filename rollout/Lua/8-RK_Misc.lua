@@ -140,7 +140,7 @@ end
 RK.hud.game = function(v, p)
 	RK.hud.toggle()
 	if not v then return end
-	if not p or not p.valid then return end
+	if not valid(p) then return end
 	if not G_IsRolloutGametype() then return end
 
 	if (RK.game.event.state == RKGS_EXIT) then
@@ -218,7 +218,7 @@ RK.hud.game = function(v, p)
 	end
 	
 	-- Rock Percentage or NaN
-	if mo and mo.valid and mo.rock and mo.rock.valid
+	if valid(mo) and valid(mo.rock) then
 		local rkhrandtics = mo.rock.bumpcounttics and mo.rock.bumpcounttics/4 or 0
 		local rkhrand = { x = (rkhrandtics > 0) and v.RandomRange(-1, 1) or 0, 
 						y = (rkhrandtics > 0) and v.RandomRange(-1, 1) or 0 }
@@ -366,7 +366,7 @@ RK.hud.scores = function(v)
 				else
 					v.drawString(offset.x + 136, vsize.y/6 + (i-1)*70, pname, vflags|V_ALLOWLOWERCASE) -- Player Name
 				end
-				if mo.rock and mo.rock.valid then
+				if valid(mo.rock) then
 					v.drawString(8*offset.x + offset.xh, vsize.y/6 + (i-1)*70, mo.rock.percent.."%", vflags, "right") -- Rock Damage
 				else
 					v.drawString(8*offset.x + offset.xh, vsize.y/6 + (i-1)*70, "NaN%", vflags|V_ALLOWLOWERCASE, "right") -- Rock Damage
@@ -391,7 +391,7 @@ RK.hud.scores = function(v)
 					else
 						v.drawString(offset.xh + 136, vsize.y/6 + (i-1)*70, pname, vflags|V_ALLOWLOWERCASE, "thin") -- Player Name
 					end
-					if mo.rock and mo.rock.valid then
+					if valid(mo.rock) then
 						v.drawString((9*offset.x)/2, vsize.y/6 + (i-1)*70, mo.rock.percent.."%", vflags, "thin-right") -- Rock Damage
 					else
 						v.drawString((9*offset.x)/2, vsize.y/6 + (i-1)*70, "NaN%", vflags|V_ALLOWLOWERCASE, "thin-right") -- Rock Damage
@@ -410,7 +410,7 @@ RK.hud.scores = function(v)
 									FRACUNIT/3, pface,
 									vflags, pcolor) -- Player Portrait w/ current player color
 					v.drawString(offset.xh2 + 136, vsize.y/6 + (i-9)*70, pname, vflags|V_ALLOWLOWERCASE, "thin") -- Player Name
-					if mo.rock and mo.rock.valid then
+					if valid(mo.rock) then
 						v.drawString((9*offset.x)/2 + vsize.x/2, vsize.y/6 + (i-9)*70, p.mo.rock.percent.."%", vflags, "thin-right") -- Rock Damage
 					else
 						v.drawString((9*offset.x)/2 + vsize.x/2, vsize.y/6 + (i-9)*70, "NaN%", vflags|V_ALLOWLOWERCASE, "thin-right") -- Rock Damage
