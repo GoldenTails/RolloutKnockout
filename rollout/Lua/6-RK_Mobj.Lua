@@ -69,7 +69,7 @@ RK.mobj.spawnArrow = function(mo, target, dist)
 	arw.color = target.color or SKINCOLOR_GREEN -- Opponent's color
 	-- Fancy maths. Ensure your papersprite angle points towards your opponent.
 	local ft = FixedAngle((leveltime%45)*(8*FRACUNIT))
-	P_TeleportMove(arw, mo.x + FixedMul(cos(arw.angle), 3*mo.radius + FixedMul(sin(ft), 4*FRACUNIT)),
+	P_MoveOrigin(arw, mo.x + FixedMul(cos(arw.angle), 3*mo.radius + FixedMul(sin(ft), 4*FRACUNIT)),
 						mo.y + FixedMul(sin(arw.angle), 3*mo.radius + FixedMul(sin(ft), 4*FRACUNIT)),
 						mo.z + mo.height/2)
 
@@ -190,24 +190,28 @@ end
 end*/
 
 RK.mobj.look4ClosestMo = function(mo, dist, mtype)
-	if not valid(mo) then return end
+	if not valid(mo) then return nil end
+	if not dist then dist = FixedMul(1024*FRACUNIT, mo.scale) end
 	
 	local closestmo
 	local closestdist = dist
-	for m in mobjs.iterate() do
-		if (m == mo) then continue end -- Skip us
-		if mtype and (m.type ~= mtype) then continue end -- If we have an mtype, search for it!
-		if (m.health <= 0) then continue end -- Dead
-		if (m.flags & MF_NOBLOCKMAP) or (m.flags & MF_SCENERY) then continue end -- Not Part of the blockmap. Ignore
+	searchBlockmap("objects", function(refmo, found)
+		if (found == refmo) then return nil end
+		if mtype and (found.type ~= mtype) then return nil end
+		if (found.health <= 0) then return nil end
+		--if found.player and found.player.spectator then return nil end
 		
-		local idist = FixedHypot(FixedHypot(m.x - mo.x, m.y - mo.y), 2*(m.z - mo.z))
-		if (idist > dist) then continue end -- Ignore objects outside of 'dist' range.
+		local idist = FixedMul(FixedHypot(FixedHypot(found.x - refmo.x, found.y - refmo.y), (found.z - refmo.z)), refmo.scale)
+		if (idist > dist) then return nil end -- Ignore objects outside of 'dist' range.
 		
-		if (idist < closestdist) then -- There's a mobj that's closer?
-			closestmo = m -- Then we're the real closest mobj!
-			closestdist = idist -- And this is our distance!
+		if (idist < closestdist) then
+			closestmo = found
+			closestdist = idist
 		end
-	end
+	end,
+	mo,
+	mo.x-dist,mo.x+dist,
+	mo.y-dist,mo.y+dist)
 	
 	return closestmo
 end
@@ -424,9 +428,9 @@ addHook("MobjThinker", function(mo)
 			if valid(mo.target)
 			and mo.target.health then
 				if (mo.target == MT_ROLLOUTROCK) then
-					P_TeleportMove(mo, mo.target.x, mo.target.y, mo.target.z)
+					P_MoveOrigin(mo, mo.target.x, mo.target.y, mo.target.z)
 				else
-					P_TeleportMove(mo, mo.target.x, mo.target.y, mo.target.z)
+					P_MoveOrigin(mo, mo.target.x, mo.target.y, mo.target.z)
 				end
 				mo.rollangle = $ + ANGLE_11hh
 				mo.angle = $ + ANGLE_11hh/3
@@ -495,10 +499,43 @@ addHook("MobjThinker", function(mo)
 	end
 end, MT_DUMMY)
 
+-- Clairebun
+-- getXYZangle: Self explainitory
+rawset(_G, "getXYZangle", function(mo1, mo2)
+	local x1, x2 = mo1.x - mo1.momx, mo2.x - mo2.momx
+	local y1, y2 = mo1.y - mo1.momy, mo2.y - mo2.momy
+	local angle = R_PointToAngle2(x1, y1, x2, y2)
+	local dist = R_PointToDist2(x1, y1, x2, y2)
+	local z1, z2 = mo1.z + mo1.height/2, mo2.z + mo2.height/2
+	local zdist = z2 - z1
+	local zangle = R_PointToAngle2(0, 0, dist, zdist)
+	return angle, zangle
+end)
+
+-- Clairebun
+rawset(_G, "getThrust", function(mo1, mo2, minimal)
+	local xyangle, zangle = getXYZangle(mo1, mo2) -- Get thrust direction based on collision angle
+	local speed
+	if minimal
+		speed = mo1.scale/2 -- "Shove" knockback
+	else
+		 -- Momentum-influenced knockback
+		local momx = mo1.momx - mo2.momx
+		local momy = mo1.momy - mo2.momy
+		local momz = mo1.momz - mo2.momz
+		speed = R_PointToDist2(0, 0, R_PointToDist2(0, 0, momx, momy), momz)
+	end
+	local thrust = P_ReturnThrustX(mo1, zangle, speed)
+	local zthrust = P_ReturnThrustY(mo1, zangle, speed)
+	local xthrust = P_ReturnThrustX(mo1, xyangle, thrust)
+	local ythrust = P_ReturnThrustY(mo1, xyangle, thrust)
+	return xthrust, ythrust, zthrust
+end)
+
 -- Rock v rock
 addHook("MobjCollide", function(thing, tmthing)
 	if valid(thing)
-	and valid(thing) then
+	and valid(tmthing) then
 		if (thing.z > (tmthing.z + tmthing.height)) -- No Z collision? Let's fix that!
 		or ((thing.z + thing.height) < tmthing.z) then
 			return -- Out of range
@@ -523,7 +560,7 @@ addHook("MobjCollide", function(thing, tmthing)
 				/*P_TeleportMove(thing, thing.x - FixedMul(cos(aang), thing.radius),
 										thing.y - FixedMul(sin(aang), thing.radius), 
 										thing.z)*/
-				P_TeleportMove(tmthing, tmthing.x - FixedMul(cos(aang), 3*tmthing.radius/2),
+				P_SetOrigin(tmthing, tmthing.x - FixedMul(cos(aang), 3*tmthing.radius/2),
 										tmthing.y - FixedMul(sin(aang), 3*tmthing.radius/2), 
 										tmthing.z)
 			end

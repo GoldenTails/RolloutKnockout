@@ -112,9 +112,9 @@ addHook("PlayerSpawn", function(player)
 		if not valid(mo.rock) then return end -- Something has gone horribly wrong
 		local rock = mo.rock -- Simplify
 		if (mo.eflags & MFE_VERTICALFLIP) then -- Place player "on" the rock
-			P_TeleportMove(mo, mo.x, mo.y, mo.z - FRACUNIT)
+			P_SetOrigin(mo, mo.x, mo.y, mo.z - FRACUNIT)
 		else
-			P_TeleportMove(mo, mo.x, mo.y, mo.z + rock.height)
+			P_SetOrigin(mo, mo.x, mo.y, mo.z + rock.height)
 		end
 		
 		rock.target = player.mo -- Target the player that spawned you. See "MobjThinker"
